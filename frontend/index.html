@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Med & Beauty - Catálogo de Productos</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* Applying Inter font to the body */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom gold color similar to the logo */
+        .gold-accent {
+            color: #c5a560;
+        }
+        .bg-gold-accent {
+            background-color: #c5a560;
+        }
+        .border-gold-accent {
+            border-color: #c5a560;
+        }
+        .ring-gold-accent {
+            --tw-ring-color: #c5a560;
+        }
+        /* Smooth scrolling behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Ensure logos have a consistent height and are centered */
+        .brand-logo {
+            max-height: 60px;
+            width: auto;
+            object-fit: contain;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- Header & Navigation -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <!-- Logo -->
+        <div class="flex items-center space-x-2">
+            <div class="w-10 h-10 rounded-full border-2 border-gold-accent flex items-center justify-center text-black text-xl font-bold">
+                MB
+            </div>
+            <span class="text-xl font-semibold text-gray-800">Med & Beauty</span>
+        </div>
+
+        <!-- Desktop Navigation Links -->
+        <div class="hidden md:flex items-center space-x-8">
+            <a href="#" class="text-gray-600 hover:text-gold-accent transition-colors">Inicio</a>
+            <a href="#productos" class="text-gray-600 hover:text-gold-accent transition-colors">Catálogo</a>
+            <a href="#marcas" class="text-gray-600 hover:text-gold-accent transition-colors">Marcas</a>
+            <a href="#footer" class="text-gray-600 hover:text-gold-accent transition-colors">Contacto</a>
+        </div>
+
+        <!-- Header Icons -->
+        <div class="flex items-center space-x-5">
+            <button class="text-gray-600 hover:text-gold-accent transition-colors">
+                <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+            </button>
+            <a href="login.html" class="text-gray-600 hover:text-gold-accent transition-colors">
+                <i class="fa-solid fa-user fa-lg"></i>
+            </a>
+            <a href="#footer" class="text-gray-600 hover:text-gold-accent transition-colors relative">
+                <i class="fa-solid fa-cart-shopping fa-lg"></i>
+            </a>
+        </div>
+    </nav>
+</header>
+
+<!-- Main Content -->
+<main class="container mx-auto px-6 py-12">
+
+    <!-- Hero Section -->
+    <section class="bg-white rounded-2xl shadow-lg overflow-hidden mb-16 flex flex-col md:flex-row items-center">
+        <div class="p-8 md:p-12 lg:p-16 w-full md:w-1/2">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4 leading-tight">Distribución Médica, Estética y Dermatológica</h1>
+            <p class="text-gray-600 text-lg mb-8">Productos de alta calidad para profesionales de la salud y la belleza.</p>
+            <a href="#productos" class="inline-block bg-gold-accent text-white font-bold py-3 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity">
+                Ver Catálogo
+            </a>
+        </div>
+        <div class="w-full md:w-1/2 h-64 md:h-auto">
+            <img src="https://www.kernpharma.com/sites/default/files/blog/contribucio%CC%81n_del_farmaceutico.jpg" alt="Farmacéutica en un laboratorio" class="w-full h-full object-cover">
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 text-center">
+        <div class="bg-white p-8 rounded-2xl shadow-md flex flex-col">
+            <div class="text-gold-accent mb-4">
+                <i class="fa-solid fa-truck-fast fa-3x"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Entrega Rápida</h3>
+            <p class="text-gray-600">Despacho de envíos el mismo día para que no detengas tu trabajo.</p>
+        </div>
+        <div class="bg-white p-8 rounded-2xl shadow-md flex flex-col">
+            <div class="text-gold-accent mb-4">
+                <i class="fa-solid fa-credit-card fa-3x"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Pago Seguro</h3>
+            <p class="text-gray-600 flex-grow">Aceptamos efectivo, tarjetas de crédito, débito y transferencias.</p>
+            <div class="mt-4 flex justify-center space-x-4">
+                <i class="fa-brands fa-cc-visa fa-2x text-gray-400"></i>
+                <i class="fa-brands fa-cc-mastercard fa-2x text-gray-400"></i>
+                <i class="fa-brands fa-cc-amex fa-2x text-gray-400"></i>
+            </div>
+        </div>
+        <div class="bg-white p-8 rounded-2xl shadow-md flex flex-col">
+            <div class="text-gold-accent mb-4">
+                <i class="fa-solid fa-headset fa-3x"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Atención Personalizada</h3>
+            <p class="text-gray-600">Servicio adaptado a tus necesidades para una mejor experiencia.</p>
+        </div>
+    </section>
+
+    <!-- Brands Section -->
+    <section id="marcas" class="mb-16">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Nuestras Marcas de Confianza</h2>
+        <div class="bg-white rounded-2xl shadow-md p-8">
+            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-y-10 gap-x-4 items-center">
+                <img src="https://s3-eu-west-1.amazonaws.com/tpd/logos/5f69ef1790dce900016b4c7f/0x0.png" alt="Logo de eptq" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://belotero.co.nz/wp-content/themes/belotero/assets/img/Belotero%20HAF.png" alt="Logo de Belotero" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://cdn.cookielaw.org/logos/9eb64978-23c0-4924-97a4-03eb6aab1106/a6465f03-5c73-498e-b290-d8543cc0efa1/117bd58d-3e9d-4020-817c-f97ad8ff7b49/Restylane.png" alt="Logo de Restylane" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://www.sweye.com/wp-content/uploads/2019/05/gem20170813juvederm-5.png" alt="Logo de Juvederm" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://radiesse.com/app/uploads/2021/10/radiesse-injectables-logo-dark-teal@3x.png" alt="Logo de Radiesse" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://cosmetic-skin-care.co.uk/wp-content/uploads/2023/08/teoxane-logo.png" alt="Logo de Teoxane" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://skingroup.com.mx/wp-content/uploads/2025/01/Sculptra.png" alt="Logo de Sculptra" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://rejuranpro.com/cdn/shop/files/rejuran-website-social_dcc25803-7caa-42c6-9f64-0142dfdb06dd.png?v=1625691284" alt="Logo de Rejuran" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://1000logos.net/wp-content/uploads/2020/04/Avene-Logo.png" alt="Logo de Avène" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Logo_IBSA.svg" alt="Logo de IBSA" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://uk.fillmed.com/wp-content/uploads/2021/01/LOGO_FILLMED-HORIZ-CENTRE-NOIR.png" alt="Logo de Fillmed" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Allergan_Logo.png" alt="Logo de Allergan" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://www.medytox.com/themeTemplateResource/getResource?id=MEDYTOX&revision=1&path=%2Fimg%2Fmedytox_ci_logo.png" alt="Logo de Medytox" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="productos">
+        <div class="text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Nuestro Catálogo</h2>
+            <p class="text-gray-600 mb-6">Explora nuestra selección de productos de las mejores marcas.</p>
+
+            <!-- Filtro por Proveedor -->
+            <div class="mb-8 max-w-xs mx-auto">
+                <label for="proveedor-filter" class="sr-only">Filtrar por proveedor</label>
+                <select id="proveedor-filter" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gold-accent">
+                    <option value="">Todos los proveedores</option>
+                    <!-- Opciones de proveedores se llenarán aquí -->
+                </select>
+            </div>
+        </div>
+
+        <!-- El contenedor de productos se llenará dinámicamente con JavaScript -->
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <!-- Indicador de carga -->
+            <p id="loading-indicator" class="col-span-full text-center text-gray-500">Cargando productos...</p>
+        </div>
+
+        <!-- Centralized Contact CTA -->
+        <div class="text-center mt-12">
+            <p class="text-gray-700 text-lg mb-4">Si tienes duda de algún producto o deseas comprarlo, contáctanos.</p>
+            <a href="#footer" class="inline-block bg-gold-accent text-white font-bold py-3 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity">
+                Contáctanos
+            </a>
+        </div>
+
+    </section>
+
+</main>
+
+<!-- Footer -->
+<footer id="footer" class="bg-gray-800 text-white mt-16">
+    <div class="container mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- About -->
+            <div>
+                <h4 class="text-lg font-bold mb-4">Med & Beauty</h4>
+                <p class="text-gray-400">Líderes en distribución de productos de vanguardia para el sector médico-estético.</p>
+            </div>
+            <!-- Links -->
+            <div>
+                <h4 class="text-lg font-bold mb-4">Enlaces Rápidos</h4>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-gray-400 hover:text-white">Sobre Nosotros</a></li>
+                    <li><a href="#productos" class="text-gray-400 hover:text-white">Catálogo</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white">Política de Privacidad</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white">Términos de Servicio</a></li>
+                </ul>
+            </div>
+            <!-- Contact -->
+            <div>
+                <h4 class="text-lg font-bold mb-4">Contacto</h4>
+                <ul class="space-y-2 text-gray-400">
+                    <li class="flex items-start"><i class="fa-solid fa-phone mt-1 mr-3"></i><span>312-201-4849</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-envelope mt-1 mr-3"></i><span>dinmecol@gmail.com</span></li>
+                </ul>
+            </div>
+            <!-- Social Media -->
+            <div>
+                <h4 class="text-lg font-bold mb-4">Síguenos</h4>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-facebook-f fa-lg"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-instagram fa-lg"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-whatsapp fa-lg"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
+            <p>&copy; 2024 Med & Beauty. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const productGrid = document.getElementById('product-grid');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const proveedorFilter = document.getElementById('proveedor-filter');
+
+        // Función para obtener los productos del backend
+        async function fetchProducts(proveedor = '') {
+            loadingIndicator.style.display = 'block';
+            productGrid.innerHTML = '';
+
+            let url = 'http://localhost:3001/api/productos';
+            if (proveedor) {
+                url += `?proveedor=${encodeURIComponent(proveedor)}`;
+            }
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const products = await response.json();
+
+                loadingIndicator.style.display = 'none';
+
+                if (products.length === 0) {
+                    productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No se encontraron productos para esta selección.</p>';
+                    return;
+                }
+
+                products.forEach(product => {
+                    const card = createProductCard(product);
+                    productGrid.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Error al obtener los productos:', error);
+                loadingIndicator.textContent = 'No se pudieron cargar los productos. Intenta de nuevo más tarde.';
+            }
+        }
+
+        // Función para cargar los proveedores en el filtro
+        async function loadProveedores() {
+            try {
+                const response = await fetch('http://localhost:3001/api/proveedores');
+                if (!response.ok) throw new Error('Error al cargar proveedores');
+                const proveedores = await response.json();
+
+                proveedores.forEach(proveedor => {
+                    const option = document.createElement('option');
+                    option.value = proveedor;
+                    option.textContent = proveedor;
+                    proveedorFilter.appendChild(option);
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Función para crear el HTML de una tarjeta de producto
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-2xl shadow-lg overflow-hidden group flex flex-col';
+
+            const formattedPrice = new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN'
+            }).format(product.Precio_de_venta_con_IVA);
+
+            card.innerHTML = `
+                <div class="relative overflow-hidden h-64">
+                     <img src="${product.URL_Imagen}" alt="Imagen de ${product.Producto}" class="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105" onerror="this.onerror=null;this.src='https://placehold.co/400x400/f0f0f0/ccc?text=Imagen+no+disponible';">
+                     <div class="absolute inset-0 bg-black flex items-center justify-center p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <p class="text-white text-center text-sm">${product.Descripcion || 'Descripción no disponible.'}</p>
+                     </div>
+                </div>
+                <div class="p-6 flex-grow flex flex-col">
+                    <h3 class="text-xl font-bold text-gray-800 mb-1">${product.Producto}</h3>
+                    <p class="text-sm text-gray-500 mb-4">${product.Proveedor || 'Marca no disponible'}</p>
+                    <p class="text-2xl font-semibold text-gray-900 mb-4 mt-auto">${formattedPrice}</p>
+                </div>
+            `;
+            return card;
+        }
+
+        // Event listener para el filtro
+        proveedorFilter.addEventListener('change', (e) => {
+            fetchProducts(e.target.value);
+        });
+
+        // Carga Inicial
+        loadProveedores();
+        fetchProducts();
+    });
+</script>
+
+</body>
+</html>
+
