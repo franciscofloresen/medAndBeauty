@@ -31,21 +31,64 @@
         .border-gold-accent {
             border-color: #c5a560;
         }
-        .ring-gold-accent {
-            --tw-ring-color: #c5a560;
-        }
         /* Smooth scrolling behavior */
         html {
             scroll-behavior: smooth;
         }
-        /* Ensure logos have a consistent height and are centered */
+
+        /* --- Carrusel de Marcas --- */
         .brand-logo {
             max-height: 60px;
-            width: auto;
+            width: 150px; /* Ancho fijo para cada logo */
             object-fit: contain;
-            margin-left: auto;
-            margin-right: auto;
+            margin: 0 2rem; /* Espacio entre logos */
         }
+
+        .brands-carousel {
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            padding: 2rem 0;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .brands-slide-track {
+            display: flex;
+            width: calc(150px * 26 + 4rem * 26); /* (Ancho del logo * número de logos * 2) + (margen * número de logos * 2) */
+            animation: scroll 40s linear infinite;
+        }
+
+        .brands-carousel:hover .brands-slide-track {
+            animation-play-state: paused;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-150px * 13 - 4rem * 13)); } /* -(Ancho del logo * número de logos) - (margen * número de logos) */
+        }
+
+        .brands-carousel::before,
+        .brands-carousel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 200px;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .brands-carousel::before {
+            left: 0;
+            background: linear-gradient(to left, rgba(255, 255, 255, 0), white);
+        }
+
+        .brands-carousel::after {
+            right: 0;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0), white);
+        }
+
     </style>
 </head>
 <body class="bg-gray-50">
@@ -119,7 +162,6 @@
             <div class="mt-4 flex justify-center space-x-4">
                 <i class="fa-brands fa-cc-visa fa-2x text-gray-400"></i>
                 <i class="fa-brands fa-cc-mastercard fa-2x text-gray-400"></i>
-                <i class="fa-brands fa-cc-amex fa-2x text-gray-400"></i>
             </div>
         </div>
         <div class="bg-white p-8 rounded-2xl shadow-md flex flex-col">
@@ -134,8 +176,23 @@
     <!-- Brands Section -->
     <section id="marcas" class="mb-16">
         <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Nuestras Marcas de Confianza</h2>
-        <div class="bg-white rounded-2xl shadow-md p-8">
-            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-y-10 gap-x-4 items-center">
+        <div class="brands-carousel">
+            <div class="brands-slide-track">
+                <!-- Logos (duplicados para el efecto infinito) -->
+                <img src="https://s3-eu-west-1.amazonaws.com/tpd/logos/5f69ef1790dce900016b4c7f/0x0.png" alt="Logo de eptq" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://belotero.co.nz/wp-content/themes/belotero/assets/img/Belotero%20HAF.png" alt="Logo de Belotero" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://cdn.cookielaw.org/logos/9eb64978-23c0-4924-97a4-03eb6aab1106/a6465f03-5c73-498e-b290-d8543cc0efa1/117bd58d-3e9d-4020-817c-f97ad8ff7b49/Restylane.png" alt="Logo de Restylane" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://www.sweye.com/wp-content/uploads/2019/05/gem20170813juvederm-5.png" alt="Logo de Juvederm" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://radiesse.com/app/uploads/2021/10/radiesse-injectables-logo-dark-teal@3x.png" alt="Logo de Radiesse" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://cosmetic-skin-care.co.uk/wp-content/uploads/2023/08/teoxane-logo.png" alt="Logo de Teoxane" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://skingroup.com.mx/wp-content/uploads/2025/01/Sculptra.png" alt="Logo de Sculptra" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://rejuranpro.com/cdn/shop/files/rejuran-website-social_dcc25803-7caa-42c6-9f64-0142dfdb06dd.png?v=1625691284" alt="Logo de Rejuran" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://1000logos.net/wp-content/uploads/2020/04/Avene-Logo.png" alt="Logo de Avène" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Logo_IBSA.svg" alt="Logo de IBSA" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://uk.fillmed.com/wp-content/uploads/2021/01/LOGO_FILLMED-HORIZ-CENTRE-NOIR.png" alt="Logo de Fillmed" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c9/Allergan_Logo.png" alt="Logo de Allergan" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <img src="https://www.medytox.com/themeTemplateResource/getResource?id=MEDYTOX&revision=1&path=%2Fimg%2Fmedytox_ci_logo.png" alt="Logo de Medytox" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
+                <!-- Copia de los logos -->
                 <img src="https://s3-eu-west-1.amazonaws.com/tpd/logos/5f69ef1790dce900016b4c7f/0x0.png" alt="Logo de eptq" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
                 <img src="https://belotero.co.nz/wp-content/themes/belotero/assets/img/Belotero%20HAF.png" alt="Logo de Belotero" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
                 <img src="https://cdn.cookielaw.org/logos/9eb64978-23c0-4924-97a4-03eb6aab1106/a6465f03-5c73-498e-b290-d8543cc0efa1/117bd58d-3e9d-4020-817c-f97ad8ff7b49/Restylane.png" alt="Logo de Restylane" class="brand-logo grayscale hover:grayscale-0 transition-all duration-300">
@@ -326,4 +383,3 @@
 
 </body>
 </html>
-
