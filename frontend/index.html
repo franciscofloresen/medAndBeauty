@@ -89,6 +89,71 @@
             background: linear-gradient(to right, rgba(255, 255, 255, 0), white);
         }
 
+        /* --- Estilos del Chatbot --- */
+        #chat-bubble {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #c5a560;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+            z-index: 1000;
+        }
+        #chat-bubble:hover {
+            transform: scale(1.1);
+        }
+        #chat-widget {
+            position: fixed;
+            bottom: 6.5rem;
+            right: 2rem;
+            width: 90%;
+            max-width: 400px;
+            height: 70vh;
+            max-height: 600px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.95) translateY(10px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+            pointer-events: none;
+            z-index: 999;
+        }
+        #chat-widget.is-open {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .chat-message {
+            padding: 0.75rem 1rem;
+            border-radius: 1.25rem;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #c5a560;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+        }
+        .bot-message {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+        }
+
     </style>
 </head>
 <body class="bg-gray-50">
@@ -215,13 +280,16 @@
         <div class="text-center">
             <h2 class="text-3xl font-bold text-gray-800 mb-2">Nuestro Catálogo</h2>
             <p class="text-gray-600 mb-6">Explora nuestra selección de productos de las mejores marcas.</p>
+            <p class="text-gray-600 mb-6">Sujeto a existencias.</p>
 
-            <!-- Filtro por Proveedor -->
-            <div class="mb-8 max-w-xs mx-auto">
-                <label for="proveedor-filter" class="sr-only">Filtrar por proveedor</label>
-                <select id="proveedor-filter" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gold-accent">
-                    <option value="">Todos los proveedores</option>
-                    <!-- Opciones de proveedores se llenarán aquí -->
+            <!-- Filtro de Ordenamiento -->
+            <div class="flex justify-center items-center gap-4 mb-8">
+                <label for="sort-by" class="font-semibold text-gray-700">Ordenar por:</label>
+                <select id="sort-by" class="w-full max-w-xs p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gold-accent">
+                    <option value="relevancia">Relevancia</option>
+                    <option value="proveedor_az">Proveedor (A-Z)</option>
+                    <option value="precio_asc">Precio: Menor a Mayor</option>
+                    <option value="precio_desc">Precio: Mayor a Menor</option>
                 </select>
             </div>
         </div>
@@ -282,26 +350,49 @@
             </div>
         </div>
         <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
-            <p>&copy; 2024 Med & Beauty. Todos los derechos reservados.</p>
+            <p>&copy; 2025 Med & Beauty. Todos los derechos reservados.</p>
         </div>
     </div>
 </footer>
+
+<!-- --- Widget del Chatbot --- -->
+<div id="chat-widget" class="hidden">
+    <div class="p-4 bg-gray-800 text-white flex justify-between items-center">
+        <h3 class="font-bold">Asistente MB Assist</h3>
+        <button id="close-chat" class="text-xl">&times;</button>
+    </div>
+    <div id="chat-messages" class="flex-1 p-4 space-y-4 overflow-y-auto flex flex-col">
+        <!-- Mensajes del chat se insertarán aquí -->
+    </div>
+    <form id="chat-form" class="p-4 border-t flex">
+        <input type="text" id="chat-input" placeholder="Escribe tu pregunta..." class="w-full p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-gold-accent" autocomplete="off">
+        <button type="submit" class="bg-gold-accent text-white px-4 rounded-r-lg font-bold">Enviar</button>
+    </form>
+</div>
+<div id="chat-bubble">
+    <i class="fa-solid fa-comment-dots fa-2x"></i>
+</div>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const productGrid = document.getElementById('product-grid');
         const loadingIndicator = document.getElementById('loading-indicator');
-        const proveedorFilter = document.getElementById('proveedor-filter');
+        const sortByFilter = document.getElementById('sort-by');
 
         // Función para obtener los productos del backend
-        async function fetchProducts(proveedor = '') {
+        async function fetchProducts() {
             loadingIndicator.style.display = 'block';
             productGrid.innerHTML = '';
 
-            let url = 'http://localhost:3001/api/productos';
-            if (proveedor) {
-                url += `?proveedor=${encodeURIComponent(proveedor)}`;
+            const sortBy = sortByFilter.value;
+
+            const params = new URLSearchParams();
+            if (sortBy && sortBy !== 'relevancia') {
+                params.append('sortBy', sortBy);
             }
+
+            let url = `http://localhost:3001/api/productos?${params.toString()}`;
 
             try {
                 const response = await fetch(url);
@@ -311,7 +402,7 @@
                 loadingIndicator.style.display = 'none';
 
                 if (products.length === 0) {
-                    productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No se encontraron productos para esta selección.</p>';
+                    productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No se encontraron productos.</p>';
                     return;
                 }
 
@@ -326,35 +417,18 @@
             }
         }
 
-        // Función para cargar los proveedores en el filtro
-        async function loadProveedores() {
-            try {
-                const response = await fetch('http://localhost:3001/api/proveedores');
-                if (!response.ok) throw new Error('Error al cargar proveedores');
-                const proveedores = await response.json();
-
-                proveedores.forEach(proveedor => {
-                    const option = document.createElement('option');
-                    option.value = proveedor;
-                    option.textContent = proveedor;
-                    proveedorFilter.appendChild(option);
-                });
-            } catch (error) {
-                console.error(error);
-            }
-        }
-
         // Función para crear el HTML de una tarjeta de producto
         function createProductCard(product) {
-            const card = document.createElement('div');
-            card.className = 'bg-white rounded-2xl shadow-lg overflow-hidden group flex flex-col';
+            const cardLink = document.createElement('a');
+            cardLink.href = `product.html?id=${product.ID}`;
+            cardLink.className = 'bg-white rounded-2xl shadow-lg overflow-hidden group flex flex-col hover:shadow-xl transition-shadow duration-300';
 
             const formattedPrice = new Intl.NumberFormat('es-MX', {
                 style: 'currency',
                 currency: 'MXN'
             }).format(product.Precio_de_venta_con_IVA);
 
-            card.innerHTML = `
+            cardLink.innerHTML = `
                 <div class="relative overflow-hidden h-64">
                      <img src="${product.URL_Imagen}" alt="Imagen de ${product.Producto}" class="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105" onerror="this.onerror=null;this.src='https://placehold.co/400x400/f0f0f0/ccc?text=Imagen+no+disponible';">
                      <div class="absolute inset-0 bg-black flex items-center justify-center p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -367,17 +441,89 @@
                     <p class="text-2xl font-semibold text-gray-900 mb-4 mt-auto">${formattedPrice}</p>
                 </div>
             `;
-            return card;
+            return cardLink;
         }
 
-        // Event listener para el filtro
-        proveedorFilter.addEventListener('change', (e) => {
-            fetchProducts(e.target.value);
-        });
+        // Event listener para el filtro de ordenamiento
+        sortByFilter.addEventListener('change', fetchProducts);
 
         // Carga Inicial
-        loadProveedores();
         fetchProducts();
+
+        // --- Lógica del Chatbot ---
+        const chatBubble = document.getElementById('chat-bubble');
+        const chatWidget = document.getElementById('chat-widget');
+        const closeChatBtn = document.getElementById('close-chat');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+
+        let chatHistory = [];
+
+        // Abrir y cerrar el widget
+        chatBubble.addEventListener('click', () => {
+            chatWidget.classList.toggle('is-open');
+            // La clase 'hidden' de tailwind tiene !important, por lo que necesitamos removerla
+            if (chatWidget.classList.contains('is-open')) {
+                chatWidget.classList.remove('hidden');
+            }
+        });
+        closeChatBtn.addEventListener('click', () => {
+            chatWidget.classList.remove('is-open');
+        });
+
+        // Enviar mensaje
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            addMessageToUI(message, 'user');
+            chatInput.value = '';
+
+            // Mostrar indicador de "escribiendo..."
+            const typingIndicator = addTypingIndicator();
+
+            try {
+                const response = await fetch('http://localhost:3001/api/chatbot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, history: chatHistory })
+                });
+
+                const data = await response.json();
+
+                // Eliminar indicador y mostrar respuesta
+                typingIndicator.remove();
+                addMessageToUI(data.reply, 'bot');
+
+                // Actualizar historial
+                chatHistory.push({ role: 'user', message: message });
+                chatHistory.push({ role: 'model', message: data.reply });
+
+            } catch (error) {
+                typingIndicator.remove();
+                addMessageToUI('Lo siento, no pude conectarme con el asistente en este momento.', 'bot');
+                console.error('Error en el chatbot:', error);
+            }
+        });
+
+        function addMessageToUI(message, role) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${role === 'user' ? 'user-message' : 'bot-message'}`;
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll
+        }
+
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'chat-message bot-message';
+            typingDiv.innerHTML = '<span class="animate-pulse">Escribiendo...</span>';
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return typingDiv;
+        }
     });
 </script>
 
