@@ -44,31 +44,34 @@ async function getEmbedding(text) {
 
 // --- Rutas Públicas ---
 
-// GET /api/productos (ACTUALIZADO con lógica de ordenamiento)
+// GET /api/productos
 app.get('/api/productos', async (req, res) => {
     try {
-        const { sortBy } = req.query;
+        const { sortBy, search } = req.query;
 
-        let sqlQuery = 'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Proveedor, Descripcion FROM Productos';
+        let sqlQuery = 'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Proveedor, Descripcion, Stock FROM Productos';
+        const params = [];
 
-        // Añadir cláusula ORDER BY según el parámetro
-        switch (sortBy) {
-            case 'proveedor_az':
-                sqlQuery += ' ORDER BY Proveedor ASC, Producto ASC';
-                break;
-            case 'precio_asc':
-                sqlQuery += ' ORDER BY Precio_de_venta_con_IVA ASC';
-                break;
-            case 'precio_desc':
-                sqlQuery += ' ORDER BY Precio_de_venta_con_IVA DESC';
-                break;
-            default:
-                // Orden por defecto (ej. por ID o sin orden específico)
-                sqlQuery += ' ORDER BY ID ASC';
-                break;
+        if (search && search.trim() !== '') {
+            sqlQuery += ' WHERE Producto LIKE ?';
+            params.push(`%${search}%`);
         }
 
-        const [results] = await pool.query(sqlQuery);
+        let orderByClause = ' ORDER BY ID ASC';
+        switch (sortBy) {
+            case 'proveedor_az':
+                orderByClause = ' ORDER BY Proveedor ASC, Producto ASC';
+                break;
+            case 'precio_asc':
+                orderByClause = ' ORDER BY Precio_de_venta_con_IVA ASC';
+                break;
+            case 'precio_desc':
+                orderByClause = ' ORDER BY Precio_de_venta_con_IVA DESC';
+                break;
+        }
+        sqlQuery += orderByClause;
+
+        const [results] = await pool.query(sqlQuery, params);
         res.json(results);
     } catch (error) {
         console.error('Error al consultar la base de datos:', error);
@@ -76,7 +79,7 @@ app.get('/api/productos', async (req, res) => {
     }
 });
 
-// GET /api/productos/:id (para página de detalle)
+// GET /api/productos/:id
 app.get('/api/productos/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -91,7 +94,7 @@ app.get('/api/productos/:id', async (req, res) => {
     }
 });
 
-// GET /api/productos/:id/recommendations
+// GET /api/productos/:id/recommendations (ACTUALIZADO)
 app.get('/api/productos/:id/recommendations', async (req, res) => {
     try {
         const { id } = req.params;
@@ -100,8 +103,9 @@ app.get('/api/productos/:id/recommendations', async (req, res) => {
             return res.status(404).json({ error: 'Producto no encontrado.' });
         }
         const proveedor = productResults[0].Proveedor;
+        // AÑADIMOS 'Stock' A LA CONSULTA DE RECOMENDACIONES
         const [recommendations] = await pool.query(
-            'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen FROM Productos WHERE Proveedor = ? AND ID != ? LIMIT 4',
+            'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Stock FROM Productos WHERE Proveedor = ? AND ID != ? LIMIT 4',
             [proveedor, id]
         );
         res.json(recommendations);
@@ -111,8 +115,6 @@ app.get('/api/productos/:id/recommendations', async (req, res) => {
     }
 });
 
-
-// ... (El resto de tus rutas: /api/proveedores, /api/login, CRUD y /api/chatbot se mantienen igual) ...
 // GET /api/proveedores
 app.get('/api/proveedores', async (req, res) => {
     try {
@@ -124,6 +126,7 @@ app.get('/api/proveedores', async (req, res) => {
         res.status(500).json({ error: 'Error al obtener los proveedores.' });
     }
 });
+
 // POST /api/login
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
@@ -147,6 +150,7 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
+
 // Middleware de Autenticación
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
@@ -158,6 +162,7 @@ function authenticateToken(req, res, next) {
         next();
     });
 }
+
 // Rutas CRUD
 app.get('/api/admin/productos', authenticateToken, async (req, res) => {
     try {
@@ -200,6 +205,7 @@ app.delete('/api/productos/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar el producto.' });
     }
 });
+
 // RUTA DEL CHATBOT
 app.post('/api/chatbot', async (req, res) => {
     const { message, history } = req.body;
@@ -239,6 +245,22 @@ app.post('/api/chatbot', async (req, res) => {
             - Métodos de pago: Efectivo, tarjetas de crédito, débito y transferencias.
             - Tiempos de envío: Entregas el mismo día en Guadalajara.
             - Contacto humano: Llama al 312-201-4849 o escribe a dinmecol@gmail.com.
+            **4. Formato de Respuesta:**
+            - **REGLA CRÍTICA DE FORMATO:** Cuando uses listas de Markdown con asteriscos (*), cada elemento DEBE empezar en una línea nueva. NUNCA coloques múltiples asteriscos en la misma línea.
+            - **Ejemplo CORRECTO:**
+              * Elemento 1
+              * Elemento 2
+            - **Ejemplo INCORRECTO:**
+              * Elemento 1 * Elemento 2
+            - Cuando presentes información de productos, sintetiza la información para evitar repeticiones.
+            - Si encuentras varias presentaciones del mismo producto (ej. Sculptra 1x5ml y 2x5ml), presenta una descripción general y luego una lista con las diferencias específicas (presentación y precio), siguiendo la regla crítica de formato.
+            - Utiliza Markdown para poner en negrita los nombres de los productos.
+            - **Ejemplo de formato deseado:**
+              "Claro, tenemos dos presentaciones de Sculptra. Es uno de los bioestimuladores más potentes, utilizado para restaurar el volumen facial y tratar la flacidez. Te detallo las opciones:
+              * **Sculptra – 2x5 ml:** Su precio es de 13850.00 MXN.
+              * **Sculptra-1x5ml:** Su precio es de 7000.00 MXN.
+              Ambos son del proveedor Sculptra. ¿Te gustaría saber algo más?"
+            - Tu objetivo es ser claro, conciso y profesional.
             **Reglas Estrictas:**
             1. Siempre da prioridad a la información del "Contexto Relevante".
             2. Usa los "Resultados de Búsqueda Externa" ÚNICAMENTE para complementar o crear una descripción si la del contexto es nula o vacía. No uses la búsqueda para precios o stock.
