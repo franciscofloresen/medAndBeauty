@@ -7,10 +7,10 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { Pinecone } = require('@pinecone-database/pinecone');
-const google = require('google-it');
+const google = require('google-it'); // Paquete de búsqueda correcto
 require('dotenv').config();
 
-// 2. Configuración
+// 2. Configuración de la aplicación y DB
 const app = express();
 const port = 3001;
 app.use(cors());
@@ -24,10 +24,12 @@ const dbConfig = {
 };
 const pool = mysql.createPool(dbConfig).promise();
 
+// --- Configuración de Pinecone ---
 const pinecone = new Pinecone();
 const pineconeIndex = pinecone.index('medandbeauty-products');
 
-// --- Funciones de Ayuda ---
+
+// --- Función para generar embeddings con Gemini ---
 async function getEmbedding(text) {
     const model = 'text-embedding-004';
     const apiKey = process.env.GEMINI_API_KEY;
@@ -42,8 +44,8 @@ async function getEmbedding(text) {
     return result.embedding.values;
 }
 
-// --- Rutas Públicas ---
 
+// --- Rutas Públicas y de Admin ---
 // GET /api/productos
 app.get('/api/productos', async (req, res) => {
     try {
@@ -52,12 +54,14 @@ app.get('/api/productos', async (req, res) => {
         let sqlQuery = 'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Proveedor, Descripcion, Stock FROM Productos';
         const params = [];
 
+        // Lógica de Búsqueda
         if (search && search.trim() !== '') {
             sqlQuery += ' WHERE Producto LIKE ?';
             params.push(`%${search}%`);
         }
 
-        let orderByClause = ' ORDER BY ID ASC';
+        // Lógica de Ordenamiento
+        let orderByClause = ' ORDER BY ID ASC'; // Orden por defecto
         switch (sortBy) {
             case 'proveedor_az':
                 orderByClause = ' ORDER BY Proveedor ASC, Producto ASC';
@@ -79,7 +83,7 @@ app.get('/api/productos', async (req, res) => {
     }
 });
 
-// GET /api/productos/:id
+// GET /api/productos/:id (para página de detalle)
 app.get('/api/productos/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -94,7 +98,7 @@ app.get('/api/productos/:id', async (req, res) => {
     }
 });
 
-// GET /api/productos/:id/recommendations (ACTUALIZADO)
+// GET /api/productos/:id/recommendations
 app.get('/api/productos/:id/recommendations', async (req, res) => {
     try {
         const { id } = req.params;
@@ -206,17 +210,23 @@ app.delete('/api/productos/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// RUTA DEL CHATBOT
+
+// --- RUTA DEL CHATBOT ACTUALIZADA CON RAG + BÚSQUEDA ---
 app.post('/api/chatbot', async (req, res) => {
     const { message, history } = req.body;
+
     try {
+        // 1. Buscar contexto relevante en Pinecone
         const questionEmbedding = await getEmbedding(message);
         const queryResponse = await pineconeIndex.query({
             vector: questionEmbedding,
             topK: 3,
             includeMetadata: true,
         });
+
         const context = queryResponse.matches.map(match => match.metadata.text).join('\n\n---\n\n');
+
+        // 2. Lógica de Búsqueda Externa
         let searchResultsText = 'No se realizó búsqueda externa.';
         if (queryResponse.matches.length > 0) {
             const mainProductInfo = queryResponse.matches[0].metadata.text;
@@ -234,62 +244,71 @@ app.post('/api/chatbot', async (req, res) => {
                 }
             }
         }
+
+        // 3. Construir el prompt para Gemini con el nuevo contexto de búsqueda
         const systemPrompt = `
             Eres 'MB Assist', un asistente experto de la distribuidora Med & Beauty.
             Tu audiencia son profesionales de la salud. Tu propósito es responder sus preguntas basándote en la siguiente información.
+
             **1. Contexto Relevante de Nuestros Productos (Fuente Principal y Segura):**
             ${context}
+
             **2. Resultados de Búsqueda Externa (Fuente Secundaria para complementar):**
             ${searchResultsText}
+            
             **3. Información Logística General:**
             - Métodos de pago: Efectivo, tarjetas de crédito, débito y transferencias.
             - Tiempos de envío: Entregas el mismo día en Guadalajara.
             - Contacto humano: Llama al 312-201-4849 o escribe a dinmecol@gmail.com.
-            **4. Formato de Respuesta:**
-            - **REGLA CRÍTICA DE FORMATO:** Cuando uses listas de Markdown con asteriscos (*), cada elemento DEBE empezar en una línea nueva. NUNCA coloques múltiples asteriscos en la misma línea.
-            - **Ejemplo CORRECTO:**
-              * Elemento 1
-              * Elemento 2
-            - **Ejemplo INCORRECTO:**
-              * Elemento 1 * Elemento 2
-            - Cuando presentes información de productos, sintetiza la información para evitar repeticiones.
-            - Si encuentras varias presentaciones del mismo producto (ej. Sculptra 1x5ml y 2x5ml), presenta una descripción general y luego una lista con las diferencias específicas (presentación y precio), siguiendo la regla crítica de formato.
-            - Utiliza Markdown para poner en negrita los nombres de los productos.
-            - **Ejemplo de formato deseado:**
-              "Claro, tenemos dos presentaciones de Sculptra. Es uno de los bioestimuladores más potentes, utilizado para restaurar el volumen facial y tratar la flacidez. Te detallo las opciones:
-              * **Sculptra – 2x5 ml:** Su precio es de 13850.00 MXN.
-              * **Sculptra-1x5ml:** Su precio es de 7000.00 MXN.
-              Ambos son del proveedor Sculptra. ¿Te gustaría saber algo más?"
-            - Tu objetivo es ser claro, conciso y profesional.
+
+            **4. Formato de Respuesta (MUY IMPORTANTE):**
+            - **REGLA DE CONCISIÓN:** Sé breve y directo. Evita párrafos largos. Cuando un usuario haga una pregunta general sobre una marca (ej. "Qué manejan de EPTQ"), tu objetivo es dar un resumen rápido.
+            - **FORMATO PARA RESÚMENES:** En lugar de una descripción larga para cada producto, presenta una lista simple con el nombre del producto, una frase muy corta sobre su uso principal, y su precio.
+            - **Ejemplo de formato deseado para un resumen:**
+              "Claro, de la línea EPTQ manejamos lo siguiente:
+              - EPTQ S500: Es el más denso, ideal para dar volumen a pómulos y mandíbula. Su precio es de 1798.00 MXN.
+              - EPTQ S300: Se usa para arrugas moderadas y profundas. Su precio es de 1740.00 MXN.
+              - EPTQ S100: Es para líneas finas como patas de gallo y ojeras. Su precio es de 1740.00 MXN."
+            - **NO uses NUNCA Markdown.** No uses asteriscos para listas ni para poner texto en negrita. Usa guiones (-) para las listas si es necesario.
+            - Tu objetivo es que la respuesta se lea de forma natural y conversacional.
+
             **Reglas Estrictas:**
             1. Siempre da prioridad a la información del "Contexto Relevante".
-            2. Usa los "Resultados de Búsqueda Externa" ÚNICAMENTE para complementar o crear una descripción si la del contexto es nula o vacía. No uses la búsqueda para precios o stock.
+            2. Usa los "Resultados de Búsqueda Externa" ÚNICAMENTE para complementar o crear una descripción si la del contexto es nula o vacía.
             3. NUNCA des consejo médico. Si te preguntan '¿cuál es mejor para...?', responde: 'Como asistente, no puedo hacer recomendaciones clínicas. Te puedo proporcionar los datos técnicos de cada producto para que tomes la mejor decisión basada en tu juicio profesional.'
             4. Responde siempre en español.
         `;
+
+        // 4. Llamar a la API de Gemini
         const chatHistory = [
             { role: "user", parts: [{ text: systemPrompt }] },
             { role: "model", parts: [{ text: "Entendido. Soy MB Assist. ¿En qué puedo ayudarte?" }] }
         ];
         history.forEach(turn => chatHistory.push({ role: turn.role, parts: [{ text: turn.message }] }));
         chatHistory.push({ role: "user", parts: [{ text: message }] });
+
         const payload = { contents: chatHistory };
         const apiKey = process.env.GEMINI_API_KEY;
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
         const apiResponse = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+
         if (!apiResponse.ok) throw new Error(`API de Gemini falló: ${apiResponse.statusText}`);
+
         const result = await apiResponse.json();
         const text = result.candidates[0].content.parts[0].text;
         res.json({ reply: text });
+
     } catch (error) {
         console.error('Error en el chatbot RAG:', error);
         res.status(500).json({ error: 'No se pudo obtener una respuesta del asistente.' });
     }
 });
+
 
 // Iniciar el servidor
 app.listen(port, () => {
