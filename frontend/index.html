@@ -154,9 +154,72 @@
             border-bottom-left-radius: 0.25rem;
         }
 
+        /* --- Estilos de Búsqueda --- */
+        #search-input.active {
+            width: 250px;
+            opacity: 1;
+            pointer-events: auto;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        /* --- Estilos del Pre-loader --- */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+        #preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .spinner {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+        .spinner-circle {
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #c5a560; /* Gold color */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .spinner-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #374151; /* Dark gray */
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
     </style>
 </head>
 <body class="bg-gray-50">
+
+<!-- Pre-loader -->
+<div id="preloader">
+    <div class="spinner">
+        <div class="spinner-circle"></div>
+        <div class="spinner-logo">MB</div>
+    </div>
+</div>
 
 <!-- Header & Navigation -->
 <header class="bg-white shadow-sm sticky top-0 z-50">
@@ -171,7 +234,7 @@
 
         <!-- Desktop Navigation Links -->
         <div class="hidden md:flex items-center space-x-8">
-            <a href="#" class="text-gray-600 hover:text-gold-accent transition-colors">Inicio</a>
+            <a href="index.html" class="text-gray-600 hover:text-gold-accent transition-colors">Inicio</a>
             <a href="#productos" class="text-gray-600 hover:text-gold-accent transition-colors">Catálogo</a>
             <a href="#marcas" class="text-gray-600 hover:text-gold-accent transition-colors">Marcas</a>
             <a href="#footer" class="text-gray-600 hover:text-gold-accent transition-colors">Contacto</a>
@@ -179,9 +242,15 @@
 
         <!-- Header Icons -->
         <div class="flex items-center space-x-5">
-            <button class="text-gray-600 hover:text-gold-accent transition-colors">
-                <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-            </button>
+            <div class="relative" id="search-container">
+                <button id="search-icon-btn" class="text-gray-600 hover:text-gold-accent transition-colors">
+                    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+                </button>
+                <input type="search" id="search-input" placeholder="Buscar producto..." class="absolute right-0 top-1/2 -translate-y-1/2 w-0 p-2 rounded-lg border border-gray-300 transition-all duration-300 opacity-0 pointer-events-none focus:outline-none focus:ring-2 focus:ring-gold-accent">
+                <div id="search-results" class="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg overflow-y-auto max-h-96 z-10 hidden">
+                    <!-- Search results will appear here -->
+                </div>
+            </div>
             <a href="login.html" class="text-gray-600 hover:text-gold-accent transition-colors">
                 <i class="fa-solid fa-user fa-lg"></i>
             </a>
@@ -215,7 +284,7 @@
             <div class="text-gold-accent mb-4">
                 <i class="fa-solid fa-truck-fast fa-3x"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Entrega Rápida</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Entrega Rápida y Segura</h3>
             <p class="text-gray-600">Despacho de envíos el mismo día para que no detengas tu trabajo.</p>
         </div>
         <div class="bg-white p-8 rounded-2xl shadow-md flex flex-col">
@@ -227,6 +296,7 @@
             <div class="mt-4 flex justify-center space-x-4">
                 <i class="fa-brands fa-cc-visa fa-2x text-gray-400"></i>
                 <i class="fa-brands fa-cc-mastercard fa-2x text-gray-400"></i>
+                <i class="fa-brands fa-cc-amex fa-2x text-gray-400"></i>
             </div>
         </div>
         <div class="bg-white p-8 rounded-2xl shadow-md flex flex-col">
@@ -325,10 +395,10 @@
             <div>
                 <h4 class="text-lg font-bold mb-4">Enlaces Rápidos</h4>
                 <ul class="space-y-2">
-                    <li><a href="#" class="text-gray-400 hover:text-white">Sobre Nosotros</a></li>
-                    <li><a href="#productos" class="text-gray-400 hover:text-white">Catálogo</a></li>
-                    <li><a href="#" class="text-gray-400 hover:text-white">Política de Privacidad</a></li>
-                    <li><a href="#" class="text-gray-400 hover:text-white">Términos de Servicio</a></li>
+                    <li><a href="index.html" class="text-gray-400 hover:text-white">Inicio</a></li>
+                    <li><a href="index.html#productos" class="text-gray-400 hover:text-white">Catálogo</a></li>
+                    <li><a href="privacy.html" class="text-gray-400 hover:text-white">Política de Privacidad</a></li>
+                    <li><a href="terms.html" class="text-gray-400 hover:text-white">Términos de Servicio</a></li>
                 </ul>
             </div>
             <!-- Contact -->
@@ -375,10 +445,19 @@
 
 
 <script>
+    // --- Pre-loader Logic ---
+    window.addEventListener('load', () => {
+        const preloader = document.getElementById('preloader');
+        preloader.classList.add('hidden');
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
         const productGrid = document.getElementById('product-grid');
         const loadingIndicator = document.getElementById('loading-indicator');
         const sortByFilter = document.getElementById('sort-by');
+        const searchIconBtn = document.getElementById('search-icon-btn');
+        const searchInput = document.getElementById('search-input');
+        const searchResultsContainer = document.getElementById('search-results');
 
         // Función para obtener los productos del backend
         async function fetchProducts() {
@@ -423,10 +502,17 @@
             cardLink.href = `product.html?id=${product.ID}`;
             cardLink.className = 'bg-white rounded-2xl shadow-lg overflow-hidden group flex flex-col hover:shadow-xl transition-shadow duration-300';
 
-            const formattedPrice = new Intl.NumberFormat('es-MX', {
-                style: 'currency',
-                currency: 'MXN'
-            }).format(product.Precio_de_venta_con_IVA);
+            let priceHTML;
+            // LÓGICA ACTUALIZADA: Basada en el Stock
+            if (product.Stock > 0) {
+                const formattedPrice = new Intl.NumberFormat('es-MX', {
+                    style: 'currency',
+                    currency: 'MXN'
+                }).format(product.Precio_de_venta_con_IVA);
+                priceHTML = `<p class="text-2xl font-semibold text-gray-900 mb-4 mt-auto">${formattedPrice}</p>`;
+            } else {
+                priceHTML = `<p class="text-xl font-semibold text-red-500 mb-4 mt-auto">Agotado</p>`;
+            }
 
             cardLink.innerHTML = `
                 <div class="relative overflow-hidden h-64">
@@ -438,11 +524,69 @@
                 <div class="p-6 flex-grow flex flex-col">
                     <h3 class="text-xl font-bold text-gray-800 mb-1">${product.Producto}</h3>
                     <p class="text-sm text-gray-500 mb-4">${product.Proveedor || 'Marca no disponible'}</p>
-                    <p class="text-2xl font-semibold text-gray-900 mb-4 mt-auto">${formattedPrice}</p>
+                    ${priceHTML}
                 </div>
             `;
             return cardLink;
         }
+
+        // --- Lógica de Búsqueda ---
+        searchIconBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            searchInput.classList.toggle('active');
+            if (searchInput.classList.contains('active')) {
+                searchInput.focus();
+            } else {
+                searchResultsContainer.classList.add('hidden');
+            }
+        });
+
+        let searchTimeout;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const query = searchInput.value;
+                if (query.length < 2) {
+                    searchResultsContainer.classList.add('hidden');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:3001/api/productos?search=${query}`);
+                    const results = await response.json();
+
+                    searchResultsContainer.innerHTML = '';
+                    if (results.length > 0) {
+                        results.forEach(product => {
+                            const item = document.createElement('a');
+                            item.href = `product.html?id=${product.ID}`;
+                            item.className = 'flex items-center p-3 hover:bg-gray-100 border-b last:border-b-0';
+                            item.innerHTML = `
+                                <img src="${product.URL_Imagen}" class="w-12 h-12 object-contain mr-4" onerror="this.onerror=null;this.src='https://placehold.co/48x48/f0f0f0/ccc?text=Img';">
+                                <div>
+                                    <p class="font-semibold text-gray-800">${product.Producto}</p>
+                                    <p class="text-sm text-gray-500">${product.Proveedor}</p>
+                                </div>
+                            `;
+                            searchResultsContainer.appendChild(item);
+                        });
+                        searchResultsContainer.classList.remove('hidden');
+                    } else {
+                        searchResultsContainer.innerHTML = '<p class="p-3 text-gray-500">No se encontraron resultados.</p>';
+                        searchResultsContainer.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error en la búsqueda:', error);
+                }
+            }, 300); // Debounce para no hacer peticiones en cada tecla
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('search-container').contains(e.target)) {
+                searchInput.classList.remove('active');
+                searchResultsContainer.classList.add('hidden');
+            }
+        });
 
         // Event listener para el filtro de ordenamiento
         sortByFilter.addEventListener('change', fetchProducts);
@@ -463,7 +607,6 @@
         // Abrir y cerrar el widget
         chatBubble.addEventListener('click', () => {
             chatWidget.classList.toggle('is-open');
-            // La clase 'hidden' de tailwind tiene !important, por lo que necesitamos removerla
             if (chatWidget.classList.contains('is-open')) {
                 chatWidget.classList.remove('hidden');
             }
@@ -481,7 +624,6 @@
             addMessageToUI(message, 'user');
             chatInput.value = '';
 
-            // Mostrar indicador de "escribiendo..."
             const typingIndicator = addTypingIndicator();
 
             try {
@@ -493,11 +635,9 @@
 
                 const data = await response.json();
 
-                // Eliminar indicador y mostrar respuesta
                 typingIndicator.remove();
                 addMessageToUI(data.reply, 'bot');
 
-                // Actualizar historial
                 chatHistory.push({ role: 'user', message: message });
                 chatHistory.push({ role: 'model', message: data.reply });
 
@@ -513,7 +653,7 @@
             messageDiv.className = `chat-message ${role === 'user' ? 'user-message' : 'bot-message'}`;
             messageDiv.textContent = message;
             chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function addTypingIndicator() {

@@ -7,10 +7,10 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { Pinecone } = require('@pinecone-database/pinecone');
-const google = require('google-it');
+const google = require('google-it'); // Paquete de búsqueda correcto
 require('dotenv').config();
 
-// 2. Configuración
+// 2. Configuración de la aplicación y DB
 const app = express();
 const port = 3001;
 app.use(cors());
@@ -24,10 +24,12 @@ const dbConfig = {
 };
 const pool = mysql.createPool(dbConfig).promise();
 
+// --- Configuración de Pinecone ---
 const pinecone = new Pinecone();
 const pineconeIndex = pinecone.index('medandbeauty-products');
 
-// --- Funciones de Ayuda ---
+
+// --- Función para generar embeddings con Gemini ---
 async function getEmbedding(text) {
     const model = 'text-embedding-004';
     const apiKey = process.env.GEMINI_API_KEY;
@@ -42,33 +44,38 @@ async function getEmbedding(text) {
     return result.embedding.values;
 }
 
-// --- Rutas Públicas ---
 
-// GET /api/productos (ACTUALIZADO con lógica de ordenamiento)
+// --- Rutas Públicas y de Admin ---
+// GET /api/productos
 app.get('/api/productos', async (req, res) => {
     try {
-        const { sortBy } = req.query;
+        const { sortBy, search } = req.query;
 
-        let sqlQuery = 'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Proveedor, Descripcion FROM Productos';
+        let sqlQuery = 'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Proveedor, Descripcion, Stock FROM Productos';
+        const params = [];
 
-        // Añadir cláusula ORDER BY según el parámetro
-        switch (sortBy) {
-            case 'proveedor_az':
-                sqlQuery += ' ORDER BY Proveedor ASC, Producto ASC';
-                break;
-            case 'precio_asc':
-                sqlQuery += ' ORDER BY Precio_de_venta_con_IVA ASC';
-                break;
-            case 'precio_desc':
-                sqlQuery += ' ORDER BY Precio_de_venta_con_IVA DESC';
-                break;
-            default:
-                // Orden por defecto (ej. por ID o sin orden específico)
-                sqlQuery += ' ORDER BY ID ASC';
-                break;
+        // Lógica de Búsqueda
+        if (search && search.trim() !== '') {
+            sqlQuery += ' WHERE Producto LIKE ?';
+            params.push(`%${search}%`);
         }
 
-        const [results] = await pool.query(sqlQuery);
+        // Lógica de Ordenamiento
+        let orderByClause = ' ORDER BY ID ASC'; // Orden por defecto
+        switch (sortBy) {
+            case 'proveedor_az':
+                orderByClause = ' ORDER BY Proveedor ASC, Producto ASC';
+                break;
+            case 'precio_asc':
+                orderByClause = ' ORDER BY Precio_de_venta_con_IVA ASC';
+                break;
+            case 'precio_desc':
+                orderByClause = ' ORDER BY Precio_de_venta_con_IVA DESC';
+                break;
+        }
+        sqlQuery += orderByClause;
+
+        const [results] = await pool.query(sqlQuery, params);
         res.json(results);
     } catch (error) {
         console.error('Error al consultar la base de datos:', error);
@@ -100,8 +107,9 @@ app.get('/api/productos/:id/recommendations', async (req, res) => {
             return res.status(404).json({ error: 'Producto no encontrado.' });
         }
         const proveedor = productResults[0].Proveedor;
+        // AÑADIMOS 'Stock' A LA CONSULTA DE RECOMENDACIONES
         const [recommendations] = await pool.query(
-            'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen FROM Productos WHERE Proveedor = ? AND ID != ? LIMIT 4',
+            'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Stock FROM Productos WHERE Proveedor = ? AND ID != ? LIMIT 4',
             [proveedor, id]
         );
         res.json(recommendations);
@@ -111,8 +119,6 @@ app.get('/api/productos/:id/recommendations', async (req, res) => {
     }
 });
 
-
-// ... (El resto de tus rutas: /api/proveedores, /api/login, CRUD y /api/chatbot se mantienen igual) ...
 // GET /api/proveedores
 app.get('/api/proveedores', async (req, res) => {
     try {
@@ -124,6 +130,7 @@ app.get('/api/proveedores', async (req, res) => {
         res.status(500).json({ error: 'Error al obtener los proveedores.' });
     }
 });
+
 // POST /api/login
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
@@ -147,6 +154,7 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor.' });
     }
 });
+
 // Middleware de Autenticación
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
@@ -158,6 +166,7 @@ function authenticateToken(req, res, next) {
         next();
     });
 }
+
 // Rutas CRUD
 app.get('/api/admin/productos', authenticateToken, async (req, res) => {
     try {
@@ -200,17 +209,24 @@ app.delete('/api/productos/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar el producto.' });
     }
 });
-// RUTA DEL CHATBOT
+
+
+// --- RUTA DEL CHATBOT ACTUALIZADA CON RAG + BÚSQUEDA ---
 app.post('/api/chatbot', async (req, res) => {
     const { message, history } = req.body;
+
     try {
+        // 1. Buscar contexto relevante en Pinecone
         const questionEmbedding = await getEmbedding(message);
         const queryResponse = await pineconeIndex.query({
             vector: questionEmbedding,
             topK: 3,
             includeMetadata: true,
         });
+
         const context = queryResponse.matches.map(match => match.metadata.text).join('\n\n---\n\n');
+
+        // 2. Lógica de Búsqueda Externa
         let searchResultsText = 'No se realizó búsqueda externa.';
         if (queryResponse.matches.length > 0) {
             const mainProductInfo = queryResponse.matches[0].metadata.text;
@@ -228,46 +244,71 @@ app.post('/api/chatbot', async (req, res) => {
                 }
             }
         }
+
+        // 3. Construir el prompt para Gemini con el nuevo contexto de búsqueda
         const systemPrompt = `
             Eres 'MB Assist', un asistente experto de la distribuidora Med & Beauty.
             Tu audiencia son profesionales de la salud. Tu propósito es responder sus preguntas basándote en la siguiente información.
+
             **1. Contexto Relevante de Nuestros Productos (Fuente Principal y Segura):**
             ${context}
+
             **2. Resultados de Búsqueda Externa (Fuente Secundaria para complementar):**
             ${searchResultsText}
+            
             **3. Información Logística General:**
             - Métodos de pago: Efectivo, tarjetas de crédito, débito y transferencias.
             - Tiempos de envío: Entregas el mismo día en Guadalajara.
             - Contacto humano: Llama al 312-201-4849 o escribe a dinmecol@gmail.com.
+
+            **4. Formato de Respuesta (MUY IMPORTANTE):**
+            - **REGLA DE CONCISIÓN:** Sé breve y directo. Evita párrafos largos. Cuando un usuario haga una pregunta general sobre una marca (ej. "Qué manejan de EPTQ"), tu objetivo es dar un resumen rápido.
+            - **FORMATO PARA RESÚMENES:** En lugar de una descripción larga para cada producto, presenta una lista simple con el nombre del producto, una frase muy corta sobre su uso principal, y su precio.
+            - **Ejemplo de formato deseado para un resumen:**
+              "Claro, de la línea EPTQ manejamos lo siguiente:
+              - EPTQ S500: Es el más denso, ideal para dar volumen a pómulos y mandíbula. Su precio es de 1798.00 MXN.
+              - EPTQ S300: Se usa para arrugas moderadas y profundas. Su precio es de 1740.00 MXN.
+              - EPTQ S100: Es para líneas finas como patas de gallo y ojeras. Su precio es de 1740.00 MXN."
+            - **NO uses NUNCA Markdown.** No uses asteriscos para listas ni para poner texto en negrita. Usa guiones (-) para las listas si es necesario.
+            - Tu objetivo es que la respuesta se lea de forma natural y conversacional.
+
             **Reglas Estrictas:**
             1. Siempre da prioridad a la información del "Contexto Relevante".
-            2. Usa los "Resultados de Búsqueda Externa" ÚNICAMENTE para complementar o crear una descripción si la del contexto es nula o vacía. No uses la búsqueda para precios o stock.
+            2. Usa los "Resultados de Búsqueda Externa" ÚNICAMENTE para complementar o crear una descripción si la del contexto es nula o vacía.
             3. NUNCA des consejo médico. Si te preguntan '¿cuál es mejor para...?', responde: 'Como asistente, no puedo hacer recomendaciones clínicas. Te puedo proporcionar los datos técnicos de cada producto para que tomes la mejor decisión basada en tu juicio profesional.'
             4. Responde siempre en español.
         `;
+
+        // 4. Llamar a la API de Gemini
         const chatHistory = [
             { role: "user", parts: [{ text: systemPrompt }] },
             { role: "model", parts: [{ text: "Entendido. Soy MB Assist. ¿En qué puedo ayudarte?" }] }
         ];
         history.forEach(turn => chatHistory.push({ role: turn.role, parts: [{ text: turn.message }] }));
         chatHistory.push({ role: "user", parts: [{ text: message }] });
+
         const payload = { contents: chatHistory };
         const apiKey = process.env.GEMINI_API_KEY;
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
         const apiResponse = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+
         if (!apiResponse.ok) throw new Error(`API de Gemini falló: ${apiResponse.statusText}`);
+
         const result = await apiResponse.json();
         const text = result.candidates[0].content.parts[0].text;
         res.json({ reply: text });
+
     } catch (error) {
         console.error('Error en el chatbot RAG:', error);
         res.status(500).json({ error: 'No se pudo obtener una respuesta del asistente.' });
     }
 });
+
 
 // Iniciar el servidor
 app.listen(port, () => {

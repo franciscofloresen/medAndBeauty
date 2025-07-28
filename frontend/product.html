@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles del Producto - Med & Beauty</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Librería para convertir Markdown a HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gold-accent { color: #c5a560; }
+        .bg-gold-accent { background-color: #c5a560; }
+        /* Estilos para el contenido generado por Markdown */
+        .prose h3 { font-size: 1.125rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 1rem; color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem;}
+        .prose ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .prose li { margin-bottom: 0.5rem; }
+        .prose p { margin-bottom: 1rem; }
+        .prose strong { color: #111827; }
+
+        /* --- Estilos del Pre-loader --- */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+        #preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .spinner {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+        .spinner-circle {
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #c5a560; /* Gold color */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .spinner-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #374151; /* Dark gray */
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- Pre-loader -->
+<div id="preloader">
+    <div class="spinner">
+        <div class="spinner-circle"></div>
+        <div class="spinner-logo">MB</div>
+    </div>
+</div>
+
+<!-- Header (simplificado) -->
+<header class="bg-white shadow-sm">
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="index.html" class="flex items-center space-x-2">
+            <div class="w-10 h-10 rounded-full border-2 border-gold-accent flex items-center justify-center text-black text-xl font-bold">MB</div>
+            <span class="text-xl font-semibold text-gray-800">Med & Beauty</span>
+        </a>
+        <a href="index.html#productos" class="text-gray-600 hover:text-gold-accent transition-colors">← Volver al Catálogo</a>
+    </nav>
+</header>
+
+<main class="container mx-auto px-6 py-12">
+    <!-- Contenedor principal del producto -->
+    <div id="product-detail-container" class="bg-white p-8 md:p-12 rounded-2xl shadow-lg">
+        <!-- El contenido se cargará aquí. Indicador de carga inicial: -->
+        <p id="loading-product">Cargando detalles del producto...</p>
+    </div>
+
+    <!-- Sección de Recomendaciones -->
+    <div id="recommendations-section" class="mt-16">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">También te podría interesar</h2>
+        <div id="recommendations-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Las recomendaciones se cargarán aquí -->
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer id="footer" class="bg-gray-800 text-white mt-16">
+    <div class="container mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- About -->
+            <div>
+                <h4 class="text-lg font-bold mb-4">Med & Beauty</h4>
+                <p class="text-gray-400">Líderes en distribución de productos de vanguardia para el sector médico-estético.</p>
+            </div>
+            <!-- Links -->
+            <div>
+                <h4 class="text-lg font-bold mb-4">Enlaces Rápidos</h4>
+                <ul class="space-y-2">
+                    <li><a href="index.html" class="text-gray-400 hover:text-white">Inicio</a></li>
+                    <li><a href="index.html#productos" class="text-gray-400 hover:text-white">Catálogo</a></li>
+                    <li><a href="privacy.html" class="text-gray-400 hover:text-white">Política de Privacidad</a></li>
+                    <li><a href="terms.html" class="text-gray-400 hover:text-white">Términos de Servicio</a></li>
+                </ul>
+            </div>
+            <!-- Contact -->
+            <div>
+                <h4 class="text-lg font-bold mb-4">Contacto</h4>
+                <ul class="space-y-2 text-gray-400">
+                    <li class="flex items-start"><i class="fa-solid fa-phone mt-1 mr-3"></i><span>312-201-4849</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-envelope mt-1 mr-3"></i><span>dinmecol@gmail.com</span></li>
+                </ul>
+            </div>
+            <!-- Social Media -->
+            <div>
+                <h4 class="text-lg font-bold mb-4">Síguenos</h4>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-facebook-f fa-lg"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-instagram fa-lg"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i class="fa-brands fa-whatsapp fa-lg"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
+            <p>&copy; 2025 Med & Beauty. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // --- Pre-loader Logic ---
+    window.addEventListener('load', () => {
+        const preloader = document.getElementById('preloader');
+        preloader.classList.add('hidden');
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const productContainer = document.getElementById('product-detail-container');
+        const recommendationsGrid = document.getElementById('recommendations-grid');
+        const loadingIndicator = document.getElementById('loading-product');
+
+        // 1. Obtener el ID del producto de la URL
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id');
+
+        if (!productId) {
+            productContainer.innerHTML = '<p class="text-red-500">Error: No se especificó un producto.</p>';
+            return;
+        }
+
+        // 2. Función para obtener y mostrar el producto principal
+        async function loadProduct() {
+            try {
+                const response = await fetch(`http://localhost:3001/api/productos/${productId}`);
+                if (!response.ok) throw new Error('Producto no encontrado');
+                const product = await response.json();
+
+                document.title = `${product.Producto} - Med & Beauty`;
+
+                let priceHTML;
+                // LÓGICA ACTUALIZADA: Basada en el Stock
+                if (product.Stock > 0) {
+                    const formattedPrice = new Intl.NumberFormat('es-MX', {
+                        style: 'currency',
+                        currency: 'MXN'
+                    }).format(product.Precio_de_venta_con_IVA);
+                    priceHTML = `<p class="text-5xl font-light text-gray-900 py-4">${formattedPrice}</p>`;
+                } else {
+                    priceHTML = `<p class="text-3xl font-semibold text-red-500 py-4">Agotado</p>`;
+                }
+
+                const descriptionHtml = product.DescripcionDetallada
+                    ? marked.parse(product.DescripcionDetallada)
+                    : `<p>${product.Descripcion || 'No hay una descripción detallada disponible para este producto.'}</p>`;
+
+                const typeBadge = product.Tipo
+                    ? `<span class="inline-block bg-gold-accent bg-opacity-20 text-gold-accent text-sm font-semibold px-3 py-1 rounded-full">${product.Tipo}</span>`
+                    : '';
+
+                productContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <div class="bg-gray-100 p-4 rounded-lg flex items-center justify-center">
+                            <img src="${product.URL_Imagen}" alt="Imagen de ${product.Producto}" class="w-full h-auto max-h-[500px] object-contain" onerror="this.onerror=null;this.src='https://placehold.co/600x600/f0f0f0/ccc?text=Imagen+no+disponible';">
+                        </div>
+                        <div class="flex flex-col space-y-4">
+                            <div>
+                                ${typeBadge}
+                                <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mt-2">${product.Producto}</h1>
+                                <p class="text-md text-gray-500">${product.Proveedor}</p>
+                            </div>
+                            ${priceHTML}
+
+                            <div class="prose max-w-none text-gray-700 leading-relaxed border-t border-gray-200 pt-6">
+                                ${descriptionHtml}
+                            </div>
+
+                            <div class="pt-6">
+                                <a href="index.html#footer" class="inline-block bg-gold-accent text-white font-bold py-3 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity">
+                                    Solicitar Información
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error(error);
+                loadingIndicator.textContent = 'No se pudo cargar el producto.';
+            }
+        }
+
+        // 3. Función para obtener y mostrar las recomendaciones (ACTUALIZADA)
+        async function loadRecommendations() {
+            try {
+                const response = await fetch(`http://localhost:3001/api/productos/${productId}/recommendations`);
+                if (!response.ok) return;
+                const recommendations = await response.json();
+
+                recommendationsGrid.innerHTML = '';
+                recommendations.forEach(rec => {
+                    const cardLink = document.createElement('a');
+                    cardLink.href = `product.html?id=${rec.ID}`;
+                    cardLink.className = 'bg-white rounded-2xl shadow-lg overflow-hidden group hover:shadow-xl transition-shadow';
+
+                    let priceHTML;
+                    // LÓGICA AÑADIDA: Basada en el Stock de la recomendación
+                    if (rec.Stock > 0) {
+                        const formattedPrice = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(rec.Precio_de_venta_con_IVA);
+                        priceHTML = `<p class="text-gray-600">${formattedPrice}</p>`;
+                    } else {
+                        priceHTML = `<p class="text-sm font-semibold text-red-500">Agotado</p>`;
+                    }
+
+                    cardLink.innerHTML = `
+                        <div class="relative overflow-hidden h-48 bg-gray-50 flex items-center justify-center">
+                            <img src="${rec.URL_Imagen}" alt="${rec.Producto}" class="w-full h-full object-contain p-4">
+                        </div>
+                        <div class="p-4">
+                            <h4 class="font-bold text-gray-800 truncate">${rec.Producto}</h4>
+                            ${priceHTML}
+                        </div>
+                    `;
+                    recommendationsGrid.appendChild(cardLink);
+                });
+            } catch (error) {
+                console.error('Error al cargar recomendaciones:', error);
+            }
+        }
+
+        // 4. Cargar todo
+        await loadProduct();
+        await loadRecommendations();
+    });
+</script>
+
+</body>
+</html>
