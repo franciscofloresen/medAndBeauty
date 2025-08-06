@@ -1,0 +1,8 @@
+# Ignorar el archivo de variables de entorno locales
+.env
+
+# Ignorar las dependencias de desarrollo locales
+node_modules
+
+# Ignorar los logs de npm
+npm-debug.log

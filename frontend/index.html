@@ -471,7 +471,8 @@
                 params.append('sortBy', sortBy);
             }
 
-            let url = `http://localhost:3001/api/productos?${params.toString()}`;
+            // --- LÍNEA MODIFICADA 1 ---
+            let url = `https://api.distribuidoramedandbeauty.com/api/productos?${params.toString()}`;
 
             try {
                 const response = await fetch(url);
@@ -552,7 +553,8 @@
                 }
 
                 try {
-                    const response = await fetch(`http://localhost:3001/api/productos?search=${query}`);
+                    // --- LÍNEA MODIFICADA 2 ---
+                    const response = await fetch(`https://api.distribuidoramedandbeauty.com/api/productos?search=${query}`);
                     const results = await response.json();
 
                     searchResultsContainer.innerHTML = '';
@@ -627,7 +629,8 @@
             const typingIndicator = addTypingIndicator();
 
             try {
-                const response = await fetch('http://localhost:3001/api/chatbot', {
+                // --- LÍNEA MODIFICADA 3 ---
+                const response = await fetch('https://api.distribuidoramedandbeauty.com/api/chatbot', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message, history: chatHistory })

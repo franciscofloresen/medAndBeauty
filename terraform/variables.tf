@@ -3,7 +3,7 @@
 variable "aws_region" {
   description = "La región de AWS donde se desplegarán los recursos."
   type        = string
-  default     = "us-east-1" # Cambia esto a tu región preferida
+  default     = "us-east-1"
 }
 
 variable "project_name" {
@@ -15,8 +15,7 @@ variable "project_name" {
 variable "domain_name" {
   description = "Tu nombre de dominio comprado (ej. mi-tienda.com)."
   type        = string
-  # IMPORTANTE: Reemplaza esto con tu dominio real.
-  default     = "tu-dominio.com"
+  default     = "distribuidoramedandbeauty.com"
 }
 
 variable "ssm_parameter_path" {

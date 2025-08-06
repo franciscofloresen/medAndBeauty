@@ -7,14 +7,33 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { Pinecone } = require('@pinecone-database/pinecone');
-const google = require('google-it'); // Paquete de búsqueda correcto
+const google = require('google-it');
 require('dotenv').config();
 
 // 2. Configuración de la aplicación y DB
 const app = express();
 const port = 3001;
-app.use(cors());
+
+// --- CONFIGURACIÓN DE CORS CORREGIDA PARA PRODUCCIÓN ---
+// Define de dónde se aceptarán peticiones.
+const allowedOrigins = ['https://distribuidoramedandbeauty.com'];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Permite peticiones sin 'origin' (como las de Postman o apps móviles)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'La política de CORS para este sitio no permite acceso desde el origen especificado.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    }
+};
+
+// Usa la nueva configuración de CORS
+app.use(cors(corsOptions));
 app.use(express.json());
+
 
 const dbConfig = {
     host: process.env.DB_HOST,

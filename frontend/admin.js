@@ -18,7 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutButton = document.getElementById('logout-button');
 
     // --- API URL y Headers ---
-    const API_URL = 'http://localhost:3001/api/productos';
+    // --- LÍNEA MODIFICADA ---
+    const API_URL = 'https://api.distribuidoramedandbeauty.com/api/productos';
+    const ADMIN_API_URL = 'https://api.distribuidoramedandbeauty.com/api/admin/productos';
+
     const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -29,7 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cargar y mostrar todos los productos en la tabla
     async function loadProducts() {
         try {
-            const response = await fetch('http://localhost:3001/api/admin/productos', { headers });
+            // --- LÍNEA MODIFICADA ---
+            const response = await fetch(ADMIN_API_URL, { headers });
             if (!response.ok) {
                 if(response.status === 401 || response.status === 403) {
                     localStorage.removeItem('authToken');
@@ -121,7 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = target.dataset.id;
 
         if (target.classList.contains('edit-btn')) {
-            const response = await fetch(`http://localhost:3001/api/admin/productos`, { headers });
+            // --- LÍNEA MODIFICADA ---
+            const response = await fetch(ADMIN_API_URL, { headers });
             const products = await response.json();
             const product = products.find(p => p.ID == id);
             openModal(product);
