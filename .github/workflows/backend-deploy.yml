@@ -38,8 +38,3 @@ jobs:
           docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # Paso 5: Iniciar el despliegue en App Runner usando AWS CLI
-      - name: Start App Runner deployment
-        run: |
-          aws apprunner start-deployment \
-            --service-arn arn:aws:apprunner:us-east-1:593793063125:service/medandbeauty-backend-service/ae52c16f8126473e8ab652ba46db583f
