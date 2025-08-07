@@ -1,5 +1,4 @@
-# Nombre del pipeline
-name: Deploy Backend to AWS App Runner
+name: Desplegar Backend en AWS App Runner
 
 on:
   push:

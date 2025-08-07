@@ -1,4 +1,4 @@
-name: Deploy Frontend to S3 and CloudFront
+name: Desplegar Frontend en S3 y CloudFront
 
 on:
   push:

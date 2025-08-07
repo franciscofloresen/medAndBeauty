@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.removeItem('authToken');
                     window.location.href = 'login.html';
                 }
-                throw new Error('Error al cargar productos');
+                throw new Error('Error al cargar los productos');
             }
             const products = await response.json();
             productsTableBody.innerHTML = '';
