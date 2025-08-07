@@ -12,6 +12,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # --- NUEVO PASO DE DEPURACIÓN ---
+      # Este paso nos mostrará la estructura de carpetas exacta.
+      - name: List files in the workspace
+        run: ls -R
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
