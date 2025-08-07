@@ -127,32 +127,5 @@
 
 <script src="admin.js"></script>
 
-<!-- INICIO: Script de Persistencia de Clave Secreta -->
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const secretKey = 'clientesMedAndBeauty'; // Asegúrate que esta clave sea la misma que en tu CloudFront Function
-
-    // 1. Si la clave de acceso está en la URL, la guardamos en la sesión del navegador.
-    if (params.has('acceso') && params.get('acceso') === secretKey) {
-      sessionStorage.setItem('sessionAccessKey', secretKey);
-    }
-
-    // 2. Verificamos si tenemos una clave guardada en la sesión.
-    const sessionKey = sessionStorage.getItem('sessionAccessKey');
-
-    // 3. Si hay una clave guardada, la añadimos a todos los enlaces internos de la página.
-    if (sessionKey) {
-      const internalLinks = document.querySelectorAll('a[href^="index.html"], a[href^="product.html"], a[href^="login.html"], a[href^="admin.html"]');
-      internalLinks.forEach(link => {
-        const url = new URL(link.href);
-        url.searchParams.set('acceso', sessionKey);
-        link.href = url.toString();
-      });
-    }
-  });
-</script>
-<!-- FIN: Script de Persistencia de Clave Secreta -->
-
 </body>
 </html>

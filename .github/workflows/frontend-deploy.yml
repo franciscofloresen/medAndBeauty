@@ -22,7 +22,6 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy static site to S3 bucket
-        # COMANDO CORREGIDO: Apunta directamente a la carpeta frontend
         run: aws s3 sync ./frontend s3://distribuidoramedandbeauty.com --delete
 
       - name: Invalidate CloudFront cache

@@ -199,28 +199,5 @@
     });
 </script>
 
-<!-- Script de Persistencia de Clave Secreta -->
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const params = new URLSearchParams(window.location.search);
-        const secretKey = 'clientesMedAndBeauty';
-
-        if (params.has('acceso') && params.get('acceso') === secretKey) {
-            sessionStorage.setItem('sessionAccessKey', secretKey);
-        }
-
-        const sessionKey = sessionStorage.getItem('sessionAccessKey');
-
-        if (sessionKey) {
-            const internalLinks = document.querySelectorAll('a[href^="index.html"], a[href^="product.html"]');
-            internalLinks.forEach(link => {
-                const url = new URL(link.href);
-                url.searchParams.set('acceso', sessionKey);
-                link.href = url.toString();
-            });
-        }
-    });
-</script>
-
 </body>
 </html>
