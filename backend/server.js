@@ -80,7 +80,7 @@ app.get('/api/promociones', async (req, res) => {
         );
         res.json(promociones);
     } catch (error) {
-        console.error('Error al obtener promociones:', error);
+        console.error('Error al obtener las promociones:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 });
