@@ -15,22 +15,17 @@ const app = express();
 const port = 3001;
 
 // --- CONFIGURACIÓN DE CORS CORREGIDA PARA PRODUCCIÓN ---
-// Define de dónde se aceptarán peticiones.
 const allowedOrigins = ['https://distribuidoramedandbeauty.com'];
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permite peticiones sin 'origin' (como las de Postman o apps móviles)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'La política de CORS para este sitio no permite acceso desde el origen especificado.';
-            return callback(new Error(msg), false);
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('La política de CORS para este sitio no permite el acceso.'));
         }
-        return callback(null, true);
     }
 };
-
-// Usa la nueva configuración de CORS
 app.use(cors(corsOptions));
 app.use(express.json());
 
@@ -63,37 +58,50 @@ async function getEmbedding(text) {
     return result.embedding.values;
 }
 
+// --- Middleware de Autenticación (sin cambios) ---
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return res.sendStatus(401);
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.user = user;
+        next();
+    });
+}
 
-// --- Rutas Públicas y de Admin ---
+// --- RUTAS PÚBLICAS ---
+
+// GET /api/promociones - Obtener promociones activas para el carrusel
+app.get('/api/promociones', async (req, res) => {
+    try {
+        const [promociones] = await pool.query(
+            'SELECT * FROM Promociones WHERE Activa = TRUE ORDER BY Orden ASC'
+        );
+        res.json(promociones);
+    } catch (error) {
+        console.error('Error al obtener promociones:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+});
+
 // GET /api/productos
 app.get('/api/productos', async (req, res) => {
     try {
         const { sortBy, search } = req.query;
-
         let sqlQuery = 'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Proveedor, Descripcion, Stock FROM Productos';
         const params = [];
-
-        // Lógica de Búsqueda
         if (search && search.trim() !== '') {
             sqlQuery += ' WHERE Producto LIKE ?';
             params.push(`%${search}%`);
         }
-
-        // Lógica de Ordenamiento
-        let orderByClause = ' ORDER BY ID ASC'; // Orden por defecto
+        let orderByClause = ' ORDER BY ID ASC';
         switch (sortBy) {
-            case 'proveedor_az':
-                orderByClause = ' ORDER BY Proveedor ASC, Producto ASC';
-                break;
-            case 'precio_asc':
-                orderByClause = ' ORDER BY Precio_de_venta_con_IVA ASC';
-                break;
-            case 'precio_desc':
-                orderByClause = ' ORDER BY Precio_de_venta_con_IVA DESC';
-                break;
+            case 'proveedor_az': orderByClause = ' ORDER BY Proveedor ASC, Producto ASC'; break;
+            case 'precio_asc': orderByClause = ' ORDER BY Precio_de_venta_con_IVA ASC'; break;
+            case 'precio_desc': orderByClause = ' ORDER BY Precio_de_venta_con_IVA DESC'; break;
         }
         sqlQuery += orderByClause;
-
         const [results] = await pool.query(sqlQuery, params);
         res.json(results);
     } catch (error) {
@@ -102,14 +110,12 @@ app.get('/api/productos', async (req, res) => {
     }
 });
 
-// GET /api/productos/:id (para página de detalle)
+// GET /api/productos/:id
 app.get('/api/productos/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const [results] = await pool.query('SELECT * FROM Productos WHERE ID = ?', [id]);
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Producto no encontrado.' });
-        }
+        if (results.length === 0) return res.status(404).json({ error: 'Producto no encontrado.' });
         res.json(results[0]);
     } catch (error) {
         console.error('Error al obtener el producto:', error);
@@ -122,15 +128,9 @@ app.get('/api/productos/:id/recommendations', async (req, res) => {
     try {
         const { id } = req.params;
         const [productResults] = await pool.query('SELECT Proveedor FROM Productos WHERE ID = ?', [id]);
-        if (productResults.length === 0) {
-            return res.status(404).json({ error: 'Producto no encontrado.' });
-        }
+        if (productResults.length === 0) return res.status(404).json({ error: 'Producto no encontrado.' });
         const proveedor = productResults[0].Proveedor;
-        // AÑADIMOS 'Stock' A LA CONSULTA DE RECOMENDACIONES
-        const [recommendations] = await pool.query(
-            'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Stock FROM Productos WHERE Proveedor = ? AND ID != ? LIMIT 4',
-            [proveedor, id]
-        );
+        const [recommendations] = await pool.query('SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Stock FROM Productos WHERE Proveedor = ? AND ID != ? LIMIT 4', [proveedor, id]);
         res.json(recommendations);
     } catch (error) {
         console.error('Error al obtener recomendaciones:', error);
@@ -153,19 +153,13 @@ app.get('/api/proveedores', async (req, res) => {
 // POST /api/login
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ message: 'Usuario y contraseña son requeridos.' });
-    }
+    if (!username || !password) return res.status(400).json({ message: 'Usuario y contraseña son requeridos.' });
     try {
         const [rows] = await pool.query('SELECT * FROM Admins WHERE username = ?', [username]);
-        if (rows.length === 0) {
-            return res.status(401).json({ message: 'Credenciales inválidas.' });
-        }
+        if (rows.length === 0) return res.status(401).json({ message: 'Credenciales inválidas.' });
         const admin = rows[0];
         const isMatch = await bcrypt.compare(password, admin.password_hash);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Credenciales inválidas.' });
-        }
+        if (!isMatch) return res.status(401).json({ message: 'Credenciales inválidas.' });
         const token = jwt.sign({ userId: admin.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.json({ message: 'Login exitoso', token });
     } catch (error) {
@@ -174,19 +168,10 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Middleware de Autenticación
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (token == null) return res.sendStatus(401);
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
-        next();
-    });
-}
 
-// Rutas CRUD
+// --- RUTAS DE ADMINISTRACIÓN (PROTEGIDAS) ---
+
+// CRUD de Productos
 app.get('/api/admin/productos', authenticateToken, async (req, res) => {
     try {
         const [results] = await pool.query('SELECT * FROM Productos');
@@ -198,9 +183,8 @@ app.get('/api/admin/productos', authenticateToken, async (req, res) => {
 app.post('/api/productos', authenticateToken, async (req, res) => {
     const { SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion } = req.body;
     try {
-        const finalSKU = SKU || null;
         const query = 'INSERT INTO Productos (SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)';
-        const [result] = await pool.query(query, [finalSKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion]);
+        const [result] = await pool.query(query, [SKU || null, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion]);
         res.status(201).json({ message: 'Producto creado', productId: result.insertId });
     } catch (error) {
         res.status(500).json({ error: 'Error al crear el producto.' });
@@ -210,12 +194,10 @@ app.put('/api/productos/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion } = req.body;
     try {
-        const finalSKU = SKU || null;
         const query = 'UPDATE Productos SET SKU = ?, Producto = ?, Precio_de_venta_con_IVA = ?, Stock = ?, Proveedor = ?, URL_Imagen = ?, Descripcion = ? WHERE ID = ?';
-        await pool.query(query, [finalSKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, id]);
+        await pool.query(query, [SKU || null, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, id]);
         res.json({ message: 'Producto actualizado correctamente.' });
     } catch (error) {
-        console.error('Error al actualizar el producto:', error);
         res.status(500).json({ error: 'Error al actualizar el producto.' });
     }
 });
@@ -229,8 +211,48 @@ app.delete('/api/productos/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// CRUD de Promociones
+app.get('/api/admin/promociones', authenticateToken, async (req, res) => {
+    try {
+        const [results] = await pool.query('SELECT * FROM Promociones ORDER BY Orden ASC');
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener las promociones.' });
+    }
+});
+app.post('/api/admin/promociones', authenticateToken, async (req, res) => {
+    const { Titulo, Subtitulo, TextoBoton, EnlaceBoton, URL_Imagen, Activa, Orden } = req.body;
+    try {
+        const query = 'INSERT INTO Promociones (Titulo, Subtitulo, TextoBoton, EnlaceBoton, URL_Imagen, Activa, Orden) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        const [result] = await pool.query(query, [Titulo, Subtitulo, TextoBoton, EnlaceBoton, URL_Imagen, Activa, Orden]);
+        res.status(201).json({ message: 'Promoción creada', promoId: result.insertId });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al crear la promoción.' });
+    }
+});
+app.put('/api/admin/promociones/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const { Titulo, Subtitulo, TextoBoton, EnlaceBoton, URL_Imagen, Activa, Orden } = req.body;
+    try {
+        const query = 'UPDATE Promociones SET Titulo = ?, Subtitulo = ?, TextoBoton = ?, EnlaceBoton = ?, URL_Imagen = ?, Activa = ?, Orden = ? WHERE ID = ?';
+        await pool.query(query, [Titulo, Subtitulo, TextoBoton, EnlaceBoton, URL_Imagen, Activa, Orden, id]);
+        res.json({ message: 'Promoción actualizada correctamente.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al actualizar la promoción.' });
+    }
+});
+app.delete('/api/admin/promociones/:id', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM Promociones WHERE ID = ?', [id]);
+        res.json({ message: 'Promoción eliminada correctamente.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar la promoción.' });
+    }
+});
 
-// --- RUTA DEL CHATBOT ACTUALIZADA CON RAG + BÚSQUEDA ---
+
+// --- RUTA DEL CHATBOT ---
 app.post('/api/chatbot', async (req, res) => {
     const { message, history } = req.body;
 
