@@ -2,3 +2,10 @@
 .env
 .venv
 node_modules/
+
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform

@@ -1,7 +1,6 @@
 # Nombre del pipeline
 name: Deploy Backend to AWS App Runner
 
-# ¿Cuándo se ejecuta?
 on:
   push:
     branches:

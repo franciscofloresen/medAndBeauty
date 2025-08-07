@@ -345,7 +345,7 @@ app.post('/api/chatbot', async (req, res) => {
         res.json({ reply: text });
 
     } catch (error) {
-        console.error('Error en el chatbot RAG:', error);
+        console.error('Error en el chatbot:', error);
         res.status(500).json({ error: 'No se pudo obtener una respuesta del asistente.' });
     }
 });

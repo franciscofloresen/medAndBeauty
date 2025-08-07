@@ -1,7 +1,5 @@
-# Nombre del pipeline
 name: Deploy Frontend to S3 and CloudFront
 
-# ¿Cuándo se ejecuta?
 on:
   push:
     branches:
