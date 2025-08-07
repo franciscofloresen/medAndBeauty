@@ -12,12 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Paso 1: Clonar el repositorio
-      # Usando la versión más reciente (v4)
       - name: Checkout code
         uses: actions/checkout@v4
 
       # Paso 2: Configurar las credenciales de AWS
-      # Usando la versión más reciente (v4)
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -26,7 +24,6 @@ jobs:
           aws-region: us-east-1
 
       # Paso 3: Iniciar sesión en el registro de contenedores de AWS (ECR)
-      # Usando la versión más reciente (v2)
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -41,9 +38,8 @@ jobs:
           docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # Paso 5: Iniciar el despliegue en App Runner
+      # Paso 5: Iniciar el despliegue en App Runner usando AWS CLI
       - name: Start App Runner deployment
-        uses: aws-actions/aws-apprunner-start-deployment@v1
-        with:
-          service-arn: "arn:aws:apprunner:us-east-1:593793063125:service/medandbeauty-backend-service/ae52c16f8126473e8ab652ba46db583f"
-          wait-for-service-stability: 'true'
+        run: |
+          aws apprunner start-deployment \
+            --service-arn arn:aws:apprunner:us-east-1:593793063125:service/medandbeauty-backend-service/ae52c16f8126473e8ab652ba46db583f
