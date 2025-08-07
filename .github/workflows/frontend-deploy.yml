@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
 
 jobs:
   deploy:
@@ -11,11 +13,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      # --- NUEVO PASO DE DEPURACIÓN ---
-      # Este paso nos mostrará la estructura de carpetas exacta.
-      - name: List files in the workspace
-        run: ls -R
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -25,7 +22,8 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy static site to S3 bucket
-        run: aws s3 sync ./medAndBeauty/frontend s3://distribuidoramedandbeauty.com --delete
+        # COMANDO CORREGIDO: Apunta directamente a la carpeta frontend
+        run: aws s3 sync ./frontend s3://distribuidoramedandbeauty.com --delete
 
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id EU2HA5FB18SYH --paths "/*"

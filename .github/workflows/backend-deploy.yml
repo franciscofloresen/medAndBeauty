@@ -1,10 +1,12 @@
-# Nombre del pipeline
 name: Desplegar Backend en AWS App Runner
 
 on:
   push:
     branches:
       - main
+    paths:
+      # RUTA CORREGIDA: Apunta directamente a la carpeta backend
+      - 'backend/**'
 
 jobs:
   deploy:
@@ -30,7 +32,8 @@ jobs:
           ECR_REPOSITORY: medandbeauty-backend-repo
           IMAGE_TAG: latest
         run: |
-          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./medAndBeauty/backend
+          # COMANDO CORREGIDO: Apunta directamente a la carpeta backend
+          docker build --platform linux/amd64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Start App Runner deployment
