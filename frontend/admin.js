@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.removeItem('authToken');
                     window.location.href = 'login.html';
                 }
-                throw new Error('Error al cargar los productos');
+                throw new Error('Error al cargar productos');
             }
             const products = await response.json();
             productsTableBody.innerHTML = '';
@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">${product.Producto}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${product.SKU || ''}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${product.Precio_de_venta_con_IVA}</td>
                     <td class="px-6 py-4 whitespace-nowrap">${product.Stock}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -72,7 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (product) {
             productModalTitle.textContent = 'Editar Producto';
             document.getElementById('product-id').value = product.ID;
-            // ... (rellenar todos los campos del producto)
+            document.getElementById('producto-nombre').value = product.Producto;
+            document.getElementById('producto-sku').value = product.SKU;
+            document.getElementById('producto-precio').value = product.Precio_de_venta_con_IVA;
+            document.getElementById('producto-stock').value = product.Stock;
+            document.getElementById('producto-proveedor').value = product.Proveedor;
+            document.getElementById('producto-imagen').value = product.URL_Imagen;
+            document.getElementById('producto-descripcion').value = product.Descripcion;
         } else {
             productModalTitle.textContent = 'Agregar Producto';
             document.getElementById('product-id').value = '';
@@ -87,11 +94,21 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleProductFormSubmit(e) {
         e.preventDefault();
         const id = document.getElementById('product-id').value;
+
+        // --- CÓDIGO CORREGIDO ---
+        // Se obtienen los valores del formulario correctamente.
         const productData = {
-            // ... (obtener todos los datos del formulario de producto)
+            Producto: document.getElementById('producto-nombre').value,
+            SKU: document.getElementById('producto-sku').value,
+            Precio_de_venta_con_IVA: document.getElementById('producto-precio').value,
+            Stock: document.getElementById('producto-stock').value,
+            Proveedor: document.getElementById('producto-proveedor').value,
+            URL_Imagen: document.getElementById('producto-imagen').value,
+            Descripcion: document.getElementById('producto-descripcion').value
         };
 
         const method = id ? 'PUT' : 'POST';
+        // La ruta para crear es /api/productos, no /api/admin/productos
         const url = id ? `${API_BASE_URL}/productos/${id}` : `${API_BASE_URL}/productos`;
 
         try {

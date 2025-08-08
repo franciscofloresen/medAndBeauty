@@ -299,7 +299,7 @@ app.post('/api/chatbot', async (req, res) => {
             
             **3. Información Logística General:**
             - Métodos de pago: Efectivo, tarjetas de crédito, débito y transferencias.
-            - Tiempos de envío: Entregas el mismo día en Guadalajara.
+            - Tiempos de envío: Entregas el mismo día en Colima y Villa de Álvarez. Resto de Municipios sujeto a paquetería en menos de 24 horas
             - Contacto humano: Llama al 312-201-4849 o escribe a dinmecol@gmail.com.
 
             **4. Formato de Respuesta (MUY IMPORTANTE):**

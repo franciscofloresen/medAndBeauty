@@ -37,8 +37,11 @@
         .hero-swiper .swiper-pagination-bullet-active {
             background-color: #c5a560;
         }
+        .hero-swiper .swiper-slide {
+            height: auto; /* Permite que el contenido defina la altura */
+        }
 
-        /* --- (Resto de tus estilos aquí...) --- */
+        /* --- Estilos del Carrusel de Marcas --- */
         .brand-logo { max-height: 60px; width: 150px; object-fit: contain; margin: 0 2rem; }
         .brands-carousel { overflow: hidden; position: relative; width: 100%; padding: 2rem 0; background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
         .brands-slide-track { display: flex; width: calc(150px * 26 + 4rem * 26); animation: scroll 40s linear infinite; }
@@ -47,6 +50,8 @@
         .brands-carousel::before, .brands-carousel::after { content: ''; position: absolute; top: 0; width: 200px; height: 100%; z-index: 2; }
         .brands-carousel::before { left: 0; background: linear-gradient(to left, rgba(255, 255, 255, 0), white); }
         .brands-carousel::after { right: 0; background: linear-gradient(to right, rgba(255, 255, 255, 0), white); }
+
+        /* --- Estilos del Chatbot --- */
         #chat-bubble { position: fixed; bottom: 2rem; right: 2rem; width: 60px; height: 60px; border-radius: 50%; background-color: #c5a560; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s; z-index: 1000; }
         #chat-bubble:hover { transform: scale(1.1); }
         #chat-widget { position: fixed; bottom: 6.5rem; right: 2rem; width: 90%; max-width: 400px; height: 70vh; max-height: 600px; background: white; border-radius: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; transform: scale(0.95) translateY(10px); opacity: 0; transition: transform 0.3s, opacity 0.3s; pointer-events: none; z-index: 999; }
@@ -54,7 +59,11 @@
         .chat-message { padding: 0.75rem 1rem; border-radius: 1.25rem; max-width: 80%; word-wrap: break-word; }
         .user-message { background-color: #c5a560; color: white; align-self: flex-end; border-bottom-right-radius: 0.25rem; }
         .bot-message { background-color: #f3f4f6; color: #1f2937; align-self: flex-start; border-bottom-left-radius: 0.25rem; }
+
+        /* --- Estilos de Búsqueda --- */
         #search-input.active { width: 250px; opacity: 1; pointer-events: auto; padding-left: 0.75rem; padding-right: 0.75rem; }
+
+        /* --- Estilos del Pre-loader --- */
         #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #ffffff; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease-out, visibility 0.5s ease-out; }
         #preloader.hidden { opacity: 0; visibility: hidden; }
         .spinner { width: 80px; height: 80px; position: relative; }
@@ -121,17 +130,17 @@
         <div class="swiper hero-swiper bg-white rounded-2xl shadow-lg overflow-hidden">
             <div class="swiper-wrapper" id="hero-carousel-wrapper">
 
-                <!-- Slide 1: Bienvenida (se mantiene fija) -->
+                <!-- Slide 1: Bienvenida (Fija) -->
                 <div class="swiper-slide">
                     <div class="flex flex-col md:flex-row items-center">
-                        <div class="p-8 md:p-12 lg:p-16 w-full md:w-1/2">
-                            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4 leading-tight">Distribución Médica, Estética y Dermatológica</h1>
+                        <div class="p-8 md:p-12 lg:p-16 w-full md:w-1/2 flex flex-col justify-center">
+                            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4 leading-tight">Distribución médica, estética y dermatológica</h1>
                             <p class="text-gray-600 text-lg mb-8">Productos de alta calidad para profesionales de la salud y la belleza.</p>
-                            <a href="#productos" class="inline-block bg-gold-accent text-white font-bold py-3 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity">
+                            <a href="#productos" class="inline-block bg-gold-accent text-white font-bold py-3 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity self-start">
                                 Ver Catálogo
                             </a>
                         </div>
-                        <div class="w-full md:w-1/2 h-64 md:h-96 lg:h-auto">
+                        <div class="w-full md:w-1/2 h-80 md:h-auto">
                             <img src="https://www.kernpharma.com/sites/default/files/blog/contribucio%CC%81n_del_farmaceutico.jpg" alt="Farmacéutica en un laboratorio" class="w-full h-full object-cover">
                         </div>
                     </div>
@@ -335,25 +344,25 @@
                     const slide = document.createElement('div');
                     slide.className = 'swiper-slide';
 
-                    // --- DISEÑO DE PROMOCIÓN MEJORADO ---
+                    // --- DISEÑO DE PROMOCIÓN CORREGIDO (2 COLUMNAS) ---
                     slide.innerHTML = `
-                        <div class="relative w-full h-96 md:h-full bg-cover bg-center" style="background-image: url('${promo.URL_Imagen}')">
-                            <div class="absolute inset-0 flex items-center">
-                                <div class="w-full md:w-2/3 lg:w-1/2 bg-white bg-opacity-90 shadow-lg p-8 md:p-12 md:rounded-r-xl">
-                                    <p class="text-sm font-semibold gold-accent uppercase tracking-wider">Oferta Especial</p>
-                                    <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800 mt-2 leading-tight">${promo.Titulo}</h1>
-                                    <p class="text-gray-600 text-lg mt-4">${promo.Subtitulo || ''}</p>
-                                    <a href="${promo.EnlaceBoton}" class="mt-8 inline-block bg-gold-accent text-white font-bold py-3 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity">
-                                        ${promo.TextoBoton}
-                                    </a>
-                                </div>
+                        <div class="flex flex-col md:flex-row items-center">
+                            <div class="p-8 md:p-12 lg:p-16 w-full md:w-1/2 flex flex-col justify-center">
+                                <p class="text-sm font-semibold gold-accent uppercase tracking-wider self-start">Oferta Especial</p>
+                                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800 mt-2 leading-tight self-start text-left">${promo.Titulo}</h1>
+                                <p class="text-gray-600 text-lg mt-4 self-start text-left">${promo.Subtitulo || ''}</p>
+                                <a href="${promo.EnlaceBoton}" class="mt-8 inline-block bg-gold-accent text-white font-bold py-3 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity self-start">
+                                    ${promo.TextoBoton}
+                                </a>
+                            </div>
+                            <div class="w-full md:w-1/2 h-80 md:h-auto bg-gray-100 flex items-center justify-center">
+                                <img src="${promo.URL_Imagen}" alt="${promo.Titulo}" class="w-full h-full object-contain p-4">
                             </div>
                         </div>
                     `;
                     carouselWrapper.appendChild(slide);
                 });
 
-                // Actualiza el carrusel una vez que se han añadido las diapositivas
                 swiperInstance.update();
 
             } catch (error) {
@@ -361,7 +370,7 @@
             }
         };
 
-        // Inicializar Swiper INMEDIATAMENTE para que la estructura exista
+        // Inicializar Swiper
         const heroSwiper = new Swiper('.hero-swiper', {
             loop: true,
             autoplay: {
@@ -378,7 +387,7 @@
             },
         });
 
-        // Llamar a la función para cargar las promociones dinámicas
+        // Cargar las promociones dinámicas
         loadPromociones(heroSwiper);
 
 
