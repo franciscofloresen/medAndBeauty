@@ -47,8 +47,8 @@
     </div>
   </div>
 
-  <!-- NUEVA SECCIÓN DE PROMOCIONES -->
-  <div>
+  <!-- SECCIÓN DE PROMOCIONES -->
+  <div class="mb-12">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-xl font-bold text-gray-700">Gestión de Promociones (Carrusel)</h2>
       <button id="add-promo-btn" class="bg-purple-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-600">Agregar Promoción</button>
@@ -89,6 +89,13 @@
       <div class="mb-4">
         <textarea id="producto-descripcion" placeholder="Descripción del producto..." class="w-full p-2 border rounded" rows="4"></textarea>
       </div>
+      <!-- NUEVO CHECKBOX PARA REGISTRO SANITARIO -->
+      <div class="mb-4">
+        <label class="flex items-center">
+          <input type="checkbox" id="producto-registro-sanitario" class="form-checkbox h-5 w-5 text-blue-600">
+          <span class="ml-2 text-gray-700">Tiene Registro Sanitario</span>
+        </label>
+      </div>
       <div class="flex justify-end space-x-4">
         <button type="button" id="cancel-btn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600">Cancelar</button>
         <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Guardar</button>
@@ -97,7 +104,7 @@
   </div>
 </div>
 
-<!-- NUEVO Modal para Promociones -->
+<!-- Modal para Promociones -->
 <div id="promo-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 items-center justify-center overflow-y-auto">
   <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl my-8">
     <h2 id="promo-modal-title" class="text-2xl font-bold mb-4">Agregar Promoción</h2>
@@ -126,6 +133,5 @@
 </div>
 
 <script src="admin.js"></script>
-
 </body>
 </html>
