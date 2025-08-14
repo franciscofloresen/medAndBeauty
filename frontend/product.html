@@ -116,7 +116,6 @@
             return;
         }
 
-        // --- URL DE LA API CORREGIDA ---
         const API_BASE_URL = 'https://api.distribuidoramedandbeauty.com/api';
 
         async function loadProduct() {
@@ -139,6 +138,17 @@
                     ? `<span class="inline-block bg-gold-accent bg-opacity-20 text-gold-accent text-sm font-semibold px-3 py-1 rounded-full">${product.Tipo}</span>`
                     : '';
 
+                // --- NUEVA LÓGICA PARA EL REGISTRO SANITARIO ---
+                // Si el producto tiene RegistroSanitario = true (o 1), crea la insignia.
+                const registroSanitarioBadge = product.RegistroSanitario
+                    ? `<div class="mt-4 flex items-center text-green-600">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                         </svg>
+                         <span class="font-semibold text-sm">Con registro sanitario</span>
+                       </div>`
+                    : '';
+
                 productContainer.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div class="bg-gray-100 p-4 rounded-lg flex items-center justify-center">
@@ -149,6 +159,7 @@
                                 ${typeBadge}
                                 <h1 class="text-3xl lg:text-4xl font-bold text-gray-900 mt-2">${product.Producto}</h1>
                                 <p class="text-md text-gray-500">${product.Proveedor}</p>
+                                ${registroSanitarioBadge}
                             </div>
                             ${priceHTML}
                             <div class="prose max-w-none text-gray-700 leading-relaxed border-t border-gray-200 pt-6">${descriptionHtml}</div>

@@ -72,12 +72,10 @@ function authenticateToken(req, res, next) {
 
 // --- RUTAS PÚBLICAS ---
 
-// GET /api/promociones - Obtener promociones activas para el carrusel
+// GET /api/promociones
 app.get('/api/promociones', async (req, res) => {
     try {
-        const [promociones] = await pool.query(
-            'SELECT * FROM Promociones WHERE Activa = TRUE ORDER BY Orden ASC'
-        );
+        const [promociones] = await pool.query('SELECT * FROM Promociones WHERE Activa = TRUE ORDER BY Orden ASC');
         res.json(promociones);
     } catch (error) {
         console.error('Error al obtener promociones:', error);
@@ -180,27 +178,34 @@ app.get('/api/admin/productos', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Error al obtener los productos.' });
     }
 });
+
 app.post('/api/productos', authenticateToken, async (req, res) => {
-    const { SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion } = req.body;
+    // AÑADIMOS RegistroSanitario
+    const { SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, RegistroSanitario } = req.body;
     try {
-        const query = 'INSERT INTO Productos (SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)';
-        const [result] = await pool.query(query, [SKU || null, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion]);
+        const query = 'INSERT INTO Productos (SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, RegistroSanitario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+        const [result] = await pool.query(query, [SKU || null, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, RegistroSanitario || false]);
         res.status(201).json({ message: 'Producto creado', productId: result.insertId });
     } catch (error) {
+        console.error("Error al crear producto:", error);
         res.status(500).json({ error: 'Error al crear el producto.' });
     }
 });
+
 app.put('/api/productos/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
-    const { SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion } = req.body;
+    // AÑADIMOS RegistroSanitario
+    const { SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, RegistroSanitario } = req.body;
     try {
-        const query = 'UPDATE Productos SET SKU = ?, Producto = ?, Precio_de_venta_con_IVA = ?, Stock = ?, Proveedor = ?, URL_Imagen = ?, Descripcion = ? WHERE ID = ?';
-        await pool.query(query, [SKU || null, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, id]);
+        const query = 'UPDATE Productos SET SKU = ?, Producto = ?, Precio_de_venta_con_IVA = ?, Stock = ?, Proveedor = ?, URL_Imagen = ?, Descripcion = ?, RegistroSanitario = ? WHERE ID = ?';
+        await pool.query(query, [SKU || null, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, RegistroSanitario || false, id]);
         res.json({ message: 'Producto actualizado correctamente.' });
     } catch (error) {
+        console.error("Error al actualizar producto:", error);
         res.status(500).json({ error: 'Error al actualizar el producto.' });
     }
 });
+
 app.delete('/api/productos/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     try {
@@ -255,19 +260,14 @@ app.delete('/api/admin/promociones/:id', authenticateToken, async (req, res) => 
 // --- RUTA DEL CHATBOT ---
 app.post('/api/chatbot', async (req, res) => {
     const { message, history } = req.body;
-
     try {
-        // 1. Buscar contexto relevante en Pinecone
         const questionEmbedding = await getEmbedding(message);
         const queryResponse = await pineconeIndex.query({
             vector: questionEmbedding,
             topK: 3,
             includeMetadata: true,
         });
-
         const context = queryResponse.matches.map(match => match.metadata.text).join('\n\n---\n\n');
-
-        // 2. Lógica de Búsqueda Externa
         let searchResultsText = 'No se realizó búsqueda externa.';
         if (queryResponse.matches.length > 0) {
             const mainProductInfo = queryResponse.matches[0].metadata.text;
@@ -285,8 +285,6 @@ app.post('/api/chatbot', async (req, res) => {
                 }
             }
         }
-
-        // 3. Construir el prompt para Gemini con el nuevo contexto de búsqueda
         const systemPrompt = `
             Eres 'MB Assist', un asistente experto de la distribuidora Med & Beauty.
             Tu audiencia son profesionales de la salud. Tu propósito es responder sus preguntas basándote en la siguiente información.
@@ -319,31 +317,24 @@ app.post('/api/chatbot', async (req, res) => {
             3. NUNCA des consejo médico. Si te preguntan '¿cuál es mejor para...?', responde: 'Como asistente, no puedo hacer recomendaciones clínicas. Te puedo proporcionar los datos técnicos de cada producto para que tomes la mejor decisión basada en tu juicio profesional.'
             4. Responde siempre en español.
         `;
-
-        // 4. Llamar a la API de Gemini
         const chatHistory = [
             { role: "user", parts: [{ text: systemPrompt }] },
             { role: "model", parts: [{ text: "Entendido. Soy MB Assist. ¿En qué puedo ayudarte?" }] }
         ];
         history.forEach(turn => chatHistory.push({ role: turn.role, parts: [{ text: turn.message }] }));
         chatHistory.push({ role: "user", parts: [{ text: message }] });
-
         const payload = { contents: chatHistory };
         const apiKey = process.env.GEMINI_API_KEY;
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
         const apiResponse = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-
         if (!apiResponse.ok) throw new Error(`API de Gemini falló: ${apiResponse.statusText}`);
-
         const result = await apiResponse.json();
         const text = result.candidates[0].content.parts[0].text;
         res.json({ reply: text });
-
     } catch (error) {
         console.error('Error en el chatbot:', error);
         res.status(500).json({ error: 'No se pudo obtener una respuesta del asistente.' });

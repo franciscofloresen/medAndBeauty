@@ -80,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('producto-proveedor').value = product.Proveedor;
             document.getElementById('producto-imagen').value = product.URL_Imagen;
             document.getElementById('producto-descripcion').value = product.Descripcion;
+            // AÑADIMOS LÓGICA PARA EL CHECKBOX
+            document.getElementById('producto-registro-sanitario').checked = product.RegistroSanitario;
         } else {
             productModalTitle.textContent = 'Agregar Producto';
             document.getElementById('product-id').value = '';
@@ -95,8 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const id = document.getElementById('product-id').value;
 
-        // --- CÓDIGO CORREGIDO ---
-        // Se obtienen los valores del formulario correctamente.
         const productData = {
             Producto: document.getElementById('producto-nombre').value,
             SKU: document.getElementById('producto-sku').value,
@@ -104,11 +104,12 @@ document.addEventListener('DOMContentLoaded', () => {
             Stock: document.getElementById('producto-stock').value,
             Proveedor: document.getElementById('producto-proveedor').value,
             URL_Imagen: document.getElementById('producto-imagen').value,
-            Descripcion: document.getElementById('producto-descripcion').value
+            Descripcion: document.getElementById('producto-descripcion').value,
+            // AÑADIMOS EL VALOR DEL CHECKBOX
+            RegistroSanitario: document.getElementById('producto-registro-sanitario').checked
         };
 
         const method = id ? 'PUT' : 'POST';
-        // La ruta para crear es /api/productos, no /api/admin/productos
         const url = id ? `${API_BASE_URL}/productos/${id}` : `${API_BASE_URL}/productos`;
 
         try {
