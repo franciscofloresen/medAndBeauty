@@ -180,7 +180,6 @@ app.get('/api/admin/productos', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/productos', authenticateToken, async (req, res) => {
-    // AÑADIMOS RegistroSanitario
     const { SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, RegistroSanitario } = req.body;
     try {
         const query = 'INSERT INTO Productos (SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, RegistroSanitario) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
@@ -194,7 +193,6 @@ app.post('/api/productos', authenticateToken, async (req, res) => {
 
 app.put('/api/productos/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
-    // AÑADIMOS RegistroSanitario
     const { SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, RegistroSanitario } = req.body;
     try {
         const query = 'UPDATE Productos SET SKU = ?, Producto = ?, Precio_de_venta_con_IVA = ?, Stock = ?, Proveedor = ?, URL_Imagen = ?, Descripcion = ?, RegistroSanitario = ? WHERE ID = ?';
@@ -285,6 +283,8 @@ app.post('/api/chatbot', async (req, res) => {
                 }
             }
         }
+
+        // --- PROMPT ACTUALIZADO ---
         const systemPrompt = `
             Eres 'MB Assist', un asistente experto de la distribuidora Med & Beauty.
             Tu audiencia son profesionales de la salud. Tu propósito es responder sus preguntas basándote en la siguiente información.
@@ -303,9 +303,10 @@ app.post('/api/chatbot', async (req, res) => {
             **4. Formato de Respuesta (MUY IMPORTANTE):**
             - **REGLA DE CONCISIÓN:** Sé breve y directo. Evita párrafos largos. Cuando un usuario haga una pregunta general sobre una marca (ej. "Qué manejan de EPTQ"), tu objetivo es dar un resumen rápido.
             - **FORMATO PARA RESÚMENES:** En lugar de una descripción larga para cada producto, presenta una lista simple con el nombre del producto, una frase muy corta sobre su uso principal, y su precio.
+            - **NUEVA REGLA:** Si la información del producto menciona que tiene registro sanitario, indícalo claramente.
             - **Ejemplo de formato deseado para un resumen:**
               "Claro, de la línea EPTQ manejamos lo siguiente:
-              - EPTQ S500: Es el más denso, ideal para dar volumen a pómulos y mandíbula. Su precio es de 1798.00 MXN.
+              - EPTQ S500: Es el más denso, ideal para dar volumen a pómulos y mandíbula. Su precio es de 1798.00 MXN. Cuenta con registro sanitario.
               - EPTQ S300: Se usa para arrugas moderadas y profundas. Su precio es de 1740.00 MXN.
               - EPTQ S100: Es para líneas finas como patas de gallo y ojeras. Su precio es de 1740.00 MXN."
             - **NO uses NUNCA Markdown.** No uses asteriscos para listas ni para poner texto en negrita. Usa guiones (-) para las listas si es necesario.
@@ -317,6 +318,7 @@ app.post('/api/chatbot', async (req, res) => {
             3. NUNCA des consejo médico. Si te preguntan '¿cuál es mejor para...?', responde: 'Como asistente, no puedo hacer recomendaciones clínicas. Te puedo proporcionar los datos técnicos de cada producto para que tomes la mejor decisión basada en tu juicio profesional.'
             4. Responde siempre en español.
         `;
+
         const chatHistory = [
             { role: "user", parts: [{ text: systemPrompt }] },
             { role: "model", parts: [{ text: "Entendido. Soy MB Assist. ¿En qué puedo ayudarte?" }] }
@@ -336,7 +338,7 @@ app.post('/api/chatbot', async (req, res) => {
         const text = result.candidates[0].content.parts[0].text;
         res.json({ reply: text });
     } catch (error) {
-        console.error('Error en el chatbot:', error);
+        console.error('Error en el chatbot RAG:', error);
         res.status(500).json({ error: 'No se pudo obtener una respuesta del asistente.' });
     }
 });
