@@ -1,6 +1,4 @@
 // ingest.js
-// Este script se ejecuta una sola vez (o cada vez que quieras actualizar la base de conocimiento)
-// para leer tus productos de MySQL y guardarlos en Pinecone.
 
 const mysql = require('mysql2/promise');
 const { Pinecone } = require('@pinecone-database/pinecone');
@@ -8,7 +6,6 @@ require('dotenv').config();
 
 // --- Función para generar embeddings con la API de Gemini ---
 async function getEmbedding(text) {
-    // Usamos un modelo específico para embeddings, no el de chat.
     const model = 'text-embedding-004';
     const apiKey = process.env.GEMINI_API_KEY;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:embedContent?key=${apiKey}`;
@@ -45,48 +42,52 @@ async function main() {
     });
     console.log("Conexión a MySQL exitosa.");
 
-    // 2. Obtener productos de MySQL
+    // 2. Obtener productos de MySQL (CONSULTA CORREGIDA)
     console.log("Obteniendo productos de la base de datos...");
-    const [products] = await connection.execute('SELECT ID, Producto, Descripcion, Proveedor, Precio_de_venta_con_IVA FROM Productos');
+    // --- CAMBIO 1: Seleccionamos solo las columnas que pediste ---
+    const [products] = await connection.execute(
+        'SELECT ID, Producto, Proveedor, Precio_de_venta_con_IVA, Descripcion, RegistroSanitario FROM Productos'
+    );
     console.log(`Se encontraron ${products.length} productos.`);
     await connection.end();
 
-    // 3. Conectar a Pinecone (FORMA CORREGIDA)
+    // 3. Conectar a Pinecone
     console.log("Conectando a Pinecone...");
-    // La nueva versión de la librería ya no necesita el 'environment' aquí.
-    // Automáticamente usará la variable de entorno PINECONE_API_KEY.
     const pinecone = new Pinecone();
-
-    const indexName = 'medandbeauty-products'; // El nombre que le diste a tu índice
+    const indexName = 'medandbeauty-products';
     const index = pinecone.index(indexName);
     console.log("Conexión a Pinecone exitosa.");
 
     // 4. Procesar y subir cada producto a Pinecone
     console.log("Procesando y subiendo productos a Pinecone. Esto puede tardar varios minutos...");
     for (const product of products) {
+        // --- CAMBIO 2: Construimos el texto solo con los campos que pediste ---
+        let registroInfo = '';
+        if (product.RegistroSanitario) {
+            registroInfo = 'Registro Sanitario: Sí.';
+        }
+
         // Creamos un texto combinado con la información más relevante del producto
         const textToEmbed = `
             Producto: ${product.Producto}.
-            Descripción: ${product.Descripcion}.
             Proveedor: ${product.Proveedor}.
             Precio: ${product.Precio_de_venta_con_IVA} MXN.
-        `;
+            Descripción: ${product.Descripcion}.
+            ${registroInfo}
+        `.trim().replace(/\s+/g, ' '); // Limpiamos espacios extra
 
         console.log(`- Procesando producto ID: ${product.ID} - ${product.Producto}`);
 
-        // Generamos el vector (embedding) para este texto
         const embedding = await getEmbedding(textToEmbed);
 
-        // Preparamos el objeto para subir a Pinecone
         const vector = {
-            id: product.ID.toString(), // El ID debe ser un string
+            id: product.ID.toString(),
             values: embedding,
-            metadata: { // Guardamos información adicional que queramos recuperar
+            metadata: {
                 text: textToEmbed
             }
         };
 
-        // Subimos el vector al índice de Pinecone
         await index.upsert([vector]);
     }
 
