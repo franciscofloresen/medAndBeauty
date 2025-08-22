@@ -252,15 +252,26 @@
             <p class="text-gray-600 mb-6">Explora nuestra selección de productos de las mejores marcas.</p>
             <p class="text-gray-600 mb-6">Sujeto a existencias.</p>
 
-            <!-- Filtro de Ordenamiento -->
-            <div class="flex justify-center items-center gap-4 mb-8">
-                <label for="sort-by" class="font-semibold text-gray-700">Ordenar por:</label>
-                <select id="sort-by" class="w-full max-w-xs p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gold-accent">
-                    <option value="relevancia">Relevancia</option>
-                    <option value="proveedor_az">Proveedor (A-Z)</option>
-                    <option value="precio_asc">Precio: Menor a Mayor</option>
-                    <option value="precio_desc">Precio: Mayor a Menor</option>
-                </select>
+            <!-- ÁREA DE FILTROS ACTUALIZADA -->
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-8">
+                <!-- NUEVO FILTRO POR MARCA -->
+                <div class="flex items-center gap-2">
+                    <label for="brand-filter" class="font-semibold text-gray-700">Marca:</label>
+                    <select id="brand-filter" class="w-full md:w-auto p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gold-accent">
+                        <option value="todos">Todas las marcas</option>
+                        <!-- Las marcas se cargarán aquí dinámicamente -->
+                    </select>
+                </div>
+                <!-- Filtro de Ordenamiento -->
+                <div class="flex items-center gap-2">
+                    <label for="sort-by" class="font-semibold text-gray-700">Ordenar por:</label>
+                    <select id="sort-by" class="w-full md:w-auto p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gold-accent">
+                        <option value="relevancia">Relevancia</option>
+                        <option value="proveedor_az">Proveedor (A-Z)</option>
+                        <option value="precio_asc">Precio: Menor a Mayor</option>
+                        <option value="precio_desc">Precio: Mayor a Menor</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -401,26 +412,55 @@
         const productGrid = document.getElementById('product-grid');
         const loadingIndicator = document.getElementById('loading-indicator');
         const sortByFilter = document.getElementById('sort-by');
-        const searchIconBtn = document.getElementById('search-icon-btn');
+        const brandFilter = document.getElementById('brand-filter'); // Nuevo elemento
         const searchInput = document.getElementById('search-input');
         const searchResultsContainer = document.getElementById('search-results');
 
+        // NUEVA FUNCIÓN para cargar las marcas en el filtro
+        const loadBrands = async () => {
+            try {
+                const response = await fetch('https://api.distribuidoramedandbeauty.com/api/proveedores');
+                const brands = await response.json();
+                brands.forEach(brand => {
+                    const option = document.createElement('option');
+                    option.value = brand;
+                    option.textContent = brand;
+                    brandFilter.appendChild(option);
+                });
+            } catch (error) {
+                console.error("No se pudieron cargar las marcas.", error);
+            }
+        };
+
+        // FUNCIÓN fetchProducts ACTUALIZADA
         async function fetchProducts() {
             loadingIndicator.style.display = 'block';
             productGrid.innerHTML = '';
+
             const sortBy = sortByFilter.value;
+            const selectedBrand = brandFilter.value; // Obtenemos la marca seleccionada
+            const searchQuery = searchInput.value;
+
             const params = new URLSearchParams();
             if (sortBy && sortBy !== 'relevancia') {
                 params.append('sortBy', sortBy);
             }
+            if (selectedBrand && selectedBrand !== 'todos') {
+                params.append('proveedor', selectedBrand); // Añadimos el proveedor a la petición
+            }
+            if (searchQuery && searchQuery.trim() !== '') {
+                params.append('search', searchQuery);
+            }
+
             let url = `https://api.distribuidoramedandbeauty.com/api/productos?${params.toString()}`;
+
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
                 const products = await response.json();
                 loadingIndicator.style.display = 'none';
                 if (products.length === 0) {
-                    productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No se encontraron productos.</p>';
+                    productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No se encontraron productos con estos filtros.</p>';
                     return;
                 }
                 products.forEach(product => {
@@ -429,7 +469,7 @@
                 });
             } catch (error) {
                 console.error('Error al obtener los productos:', error);
-                loadingIndicator.textContent = 'No se pudieron cargar los productos. Intenta de nuevo más tarde.';
+                loadingIndicator.textContent = 'No se pudieron cargar los productos.';
             }
         }
 
@@ -475,37 +515,9 @@
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
-                const query = searchInput.value;
-                if (query.length < 2) {
-                    searchResultsContainer.classList.add('hidden');
-                    return;
-                }
-                try {
-                    const response = await fetch(`https://api.distribuidoramedandbeauty.com/api/productos?search=${query}`);
-                    const results = await response.json();
-                    searchResultsContainer.innerHTML = '';
-                    if (results.length > 0) {
-                        results.forEach(product => {
-                            const item = document.createElement('a');
-                            item.href = `product.html?id=${product.ID}`;
-                            item.className = 'flex items-center p-3 hover:bg-gray-100 border-b last:border-b-0';
-                            item.innerHTML = `
-                                <img src="${product.URL_Imagen}" class="w-12 h-12 object-contain mr-4" onerror="this.onerror=null;this.src='https://placehold.co/48x48/f0f0f0/ccc?text=Img';">
-                                <div>
-                                    <p class="font-semibold text-gray-800">${product.Producto}</p>
-                                    <p class="text-sm text-gray-500">${product.Proveedor}</p>
-                                </div>
-                            `;
-                            searchResultsContainer.appendChild(item);
-                        });
-                        searchResultsContainer.classList.remove('hidden');
-                    } else {
-                        searchResultsContainer.innerHTML = '<p class="p-3 text-gray-500">No se encontraron resultados.</p>';
-                        searchResultsContainer.classList.remove('hidden');
-                    }
-                } catch (error) {
-                    console.error('Error en la búsqueda:', error);
-                }
+                // Al buscar, reiniciamos el filtro de marca para evitar conflictos
+                brandFilter.value = 'todos';
+                fetchProducts();
             }, 300);
         });
 
@@ -516,7 +528,16 @@
             }
         });
 
+        // EVENT LISTENERS PARA FILTROS
         sortByFilter.addEventListener('change', fetchProducts);
+        brandFilter.addEventListener('change', () => {
+            // Al filtrar por marca, limpiamos la búsqueda
+            searchInput.value = '';
+            fetchProducts();
+        });
+
+        // CARGA INICIAL
+        loadBrands();
         fetchProducts();
 
         // --- Lógica del Chatbot ---

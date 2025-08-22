@@ -86,13 +86,20 @@ app.get('/api/promociones', async (req, res) => {
 // GET /api/productos
 app.get('/api/productos', async (req, res) => {
     try {
-        const { sortBy, search } = req.query;
-        let sqlQuery = 'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Proveedor, Descripcion, Stock FROM Productos';
+        const { sortBy, search, proveedor } = req.query;
+        let sqlQuery = 'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Proveedor, Descripcion, Stock FROM Productos WHERE 1=1';
         const params = [];
+
         if (search && search.trim() !== '') {
-            sqlQuery += ' WHERE Producto LIKE ?';
+            sqlQuery += ' AND Producto LIKE ?';
             params.push(`%${search}%`);
         }
+
+        if (proveedor && proveedor !== 'todos') {
+            sqlQuery += ' AND Proveedor = ?';
+            params.push(proveedor);
+        }
+
         let orderByClause = ' ORDER BY ID ASC';
         switch (sortBy) {
             case 'proveedor_az': orderByClause = ' ORDER BY Proveedor ASC, Producto ASC'; break;
@@ -172,7 +179,7 @@ app.post('/api/login', async (req, res) => {
 // CRUD de Productos
 app.get('/api/admin/productos', authenticateToken, async (req, res) => {
     try {
-        const [results] = await pool.query('SELECT * FROM Productos');
+        const [results] = await pool.query('SELECT * FROM Productos ORDER BY ID DESC');
         res.json(results);
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener los productos.' });
@@ -284,7 +291,6 @@ app.post('/api/chatbot', async (req, res) => {
             }
         }
 
-        // --- PROMPT ACTUALIZADO ---
         const systemPrompt = `
             Eres 'MB Assist', un asistente experto de la distribuidora Med & Beauty.
             Tu audiencia son profesionales de la salud. Tu propósito es responder sus preguntas basándote en la siguiente información.
