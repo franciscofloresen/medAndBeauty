@@ -412,7 +412,8 @@
         const productGrid = document.getElementById('product-grid');
         const loadingIndicator = document.getElementById('loading-indicator');
         const sortByFilter = document.getElementById('sort-by');
-        const brandFilter = document.getElementById('brand-filter'); // Nuevo elemento
+        const brandFilter = document.getElementById('brand-filter');
+        const searchIconBtn = document.getElementById('search-icon-btn');
         const searchInput = document.getElementById('search-input');
         const searchResultsContainer = document.getElementById('search-results');
 
@@ -438,7 +439,7 @@
             productGrid.innerHTML = '';
 
             const sortBy = sortByFilter.value;
-            const selectedBrand = brandFilter.value; // Obtenemos la marca seleccionada
+            const selectedBrand = brandFilter.value;
             const searchQuery = searchInput.value;
 
             const params = new URLSearchParams();
@@ -446,7 +447,7 @@
                 params.append('sortBy', sortBy);
             }
             if (selectedBrand && selectedBrand !== 'todos') {
-                params.append('proveedor', selectedBrand); // Añadimos el proveedor a la petición
+                params.append('proveedor', selectedBrand);
             }
             if (searchQuery && searchQuery.trim() !== '') {
                 params.append('search', searchQuery);
@@ -515,7 +516,6 @@
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
-                // Al buscar, reiniciamos el filtro de marca para evitar conflictos
                 brandFilter.value = 'todos';
                 fetchProducts();
             }, 300);
@@ -531,7 +531,6 @@
         // EVENT LISTENERS PARA FILTROS
         sortByFilter.addEventListener('change', fetchProducts);
         brandFilter.addEventListener('change', () => {
-            // Al filtrar por marca, limpiamos la búsqueda
             searchInput.value = '';
             fetchProducts();
         });
