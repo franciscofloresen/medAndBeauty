@@ -79,7 +79,7 @@
         /* --- Estilos de Búsqueda --- */
         #search-input.active { width: 250px; opacity: 1; pointer-events: auto; padding-left: 0.75rem; padding-right: 0.75rem; }
 
-        /* --- Estilos del Pre-loader --- */
+        /* --- Estilos del Pre-loader y Spinner --- */
         #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #ffffff; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease-out, visibility 0.5s ease-out; }
         #preloader.hidden { opacity: 0; visibility: hidden; }
         .spinner { width: 80px; height: 80px; position: relative; }
@@ -277,8 +277,7 @@
 
         <!-- El contenedor de productos se llenará dinámicamente con JavaScript -->
         <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            <!-- Indicador de carga -->
-            <p id="loading-indicator" class="col-span-full text-center text-gray-500">Cargando productos...</p>
+            <!-- El spinner de carga se insertará aquí -->
         </div>
 
         <!-- Centralized Contact CTA -->
@@ -410,7 +409,6 @@
 
         // --- LÓGICA DE PRODUCTOS ---
         const productGrid = document.getElementById('product-grid');
-        const loadingIndicator = document.getElementById('loading-indicator');
         const sortByFilter = document.getElementById('sort-by');
         const brandFilter = document.getElementById('brand-filter');
         const searchIconBtn = document.getElementById('search-icon-btn');
@@ -433,10 +431,16 @@
             }
         };
 
-        // FUNCIÓN fetchProducts ACTUALIZADA
+        // FUNCIÓN fetchProducts ACTUALIZADA CON SPINNER
         async function fetchProducts() {
-            loadingIndicator.style.display = 'block';
-            productGrid.innerHTML = '';
+            // 1. Mostrar el spinner
+            productGrid.innerHTML = `
+                <div class="col-span-full flex justify-center items-center py-16">
+                    <div class="spinner w-12 h-12">
+                         <div class="spinner-circle"></div>
+                    </div>
+                </div>
+            `;
 
             const sortBy = sortByFilter.value;
             const selectedBrand = brandFilter.value;
@@ -459,7 +463,10 @@
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
                 const products = await response.json();
-                loadingIndicator.style.display = 'none';
+
+                // 2. Limpiar la cuadrícula (quitar el spinner)
+                productGrid.innerHTML = '';
+
                 if (products.length === 0) {
                     productGrid.innerHTML = '<p class="col-span-full text-center text-gray-500">No se encontraron productos con estos filtros.</p>';
                     return;
@@ -470,7 +477,7 @@
                 });
             } catch (error) {
                 console.error('Error al obtener los productos:', error);
-                loadingIndicator.textContent = 'No se pudieron cargar los productos.';
+                productGrid.innerHTML = '<p class="col-span-full text-center text-red-500">No se pudieron cargar los productos.</p>';
             }
         }
 
