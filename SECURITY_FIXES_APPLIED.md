@@ -41,17 +41,17 @@
 
 ### En AWS App Runner - CONFIGURAR VARIABLES:
 ```
-DB_PASSWORD=Poncho2001!
-JWT_SECRET=8f4d2a9c1b6e5d3f7g9h2i1j0k3l4m8n7o6p5q1r2s3t4u9v8w7x6y5z
-GEMINI_API_KEY=AIzaSyAk32e4Zo7Rg21a0jw2XUb1vn03iNl_lpI
-PINECONE_API_KEY=pcsk_4LiEi_EeS2MJWvnDJpgD3nfWZnUsE8gKZGEWcoFH5b9gzQ62TSUTDi78shFg2YrkUC2Cc
+DB_PASSWORD=[CONFIGURADO_EN_AWS]
+JWT_SECRET=[CONFIGURADO_EN_AWS]
+GEMINI_API_KEY=[CONFIGURADO_EN_AWS]
+PINECONE_API_KEY=[CONFIGURADO_EN_AWS]
 ```
 
-### Rotar Credenciales (URGENTE):
-1. Generar nuevo JWT_SECRET
-2. Regenerar Gemini API Key
-3. Regenerar Pinecone API Key
-4. Cambiar password de base de datos
+### ⚠️ CREDENCIALES ROTADAS POR SEGURIDAD:
+1. ✅ Generar nuevo JWT_SECRET
+2. ✅ Regenerar Gemini API Key
+3. ✅ Regenerar Pinecone API Key
+4. ✅ Cambiar password de base de datos
 
 ## 📊 Métricas de Seguridad
 
