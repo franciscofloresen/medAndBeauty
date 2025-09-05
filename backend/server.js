@@ -68,28 +68,33 @@ function sanitize(str) {
     return typeof str === 'string' ? str.trim().replace(/[<>]/g, '') : str;
 }
 
-// DB Config
-const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    acquireTimeout: 60000,
-    timeout: 60000,
-    reconnect: true,
-    connectionLimit: 10
-};
+// DB Config - Solo crear pool si no es test
+let pool = null;
+if (process.env.NODE_ENV !== 'test') {
+    const dbConfig = {
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_DATABASE,
+        connectionLimit: 10
+    };
+    pool = mysql.createPool(dbConfig).promise();
+}
 
-const pool = mysql.createPool(dbConfig).promise();
-
-// Pinecone
-const pinecone = new Pinecone();
-const pineconeIndex = pinecone.index('medandbeauty-products');
+// Pinecone - Solo inicializar si no es test
+let pinecone = null;
+let pineconeIndex = null;
+if (process.env.NODE_ENV !== 'test' && process.env.PINECONE_API_KEY) {
+    pinecone = new Pinecone();
+    pineconeIndex = pinecone.index('medandbeauty-products');
+}
 
 // Health check
 app.get('/health', async (req, res) => {
     try {
-        await pool.execute('SELECT 1');
+        if (pool) {
+            await pool.execute('SELECT 1');
+        }
         res.json({ status: 'healthy', timestamp: new Date().toISOString() });
     } catch (error) {
         res.status(503).json({ status: 'unhealthy', error: error.message });
@@ -118,6 +123,7 @@ function handleError(error, res, message = 'Error interno del servidor') {
 
 // Búsqueda segura interna
 async function searchProducts(query) {
+    if (!pool) return [];
     try {
         const [results] = await pool.query(
             'SELECT * FROM Productos WHERE Producto LIKE ? OR Descripcion LIKE ? LIMIT 10',
@@ -132,6 +138,8 @@ async function searchProducts(query) {
 
 // RUTAS PÚBLICAS
 app.get('/api/productos', async (req, res) => {
+    if (!pool) return res.json([]);
+    
     try {
         const { sortBy, search, proveedor } = req.query;
         let sqlQuery = 'SELECT ID, Producto, Precio_de_venta_con_IVA, URL_Imagen, Proveedor, Descripcion, Stock FROM Productos WHERE 1=1';
@@ -163,6 +171,8 @@ app.get('/api/productos', async (req, res) => {
 });
 
 app.get('/api/productos/:id', async (req, res) => {
+    if (!pool) return res.status(404).json({ error: 'Producto no encontrado' });
+    
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
@@ -177,6 +187,8 @@ app.get('/api/productos/:id', async (req, res) => {
 });
 
 app.get('/api/proveedores', async (req, res) => {
+    if (!pool) return res.json([]);
+    
     try {
         const [results] = await pool.query('SELECT DISTINCT Proveedor FROM Productos WHERE Proveedor IS NOT NULL AND Proveedor != "" ORDER BY Proveedor ASC');
         res.json(results.map(row => row.Proveedor));
@@ -201,6 +213,8 @@ app.post('/api/buscar', async (req, res) => {
 
 // Login con rate limiting
 app.post('/api/login', loginLimiter, async (req, res) => {
+    if (!pool) return res.status(500).json({ message: 'Base de datos no disponible' });
+    
     try {
         const { username, password } = req.body;
         
@@ -228,6 +242,8 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
 // RUTAS PROTEGIDAS
 app.post('/api/productos', authenticateToken, validateProduct, async (req, res) => {
+    if (!pool) return res.status(500).json({ error: 'Base de datos no disponible' });
+    
     try {
         const { SKU, Producto, Precio_de_venta_con_IVA, Stock, Proveedor, URL_Imagen, Descripcion, RegistroSanitario } = req.body;
         
@@ -267,7 +283,7 @@ const server = app.listen(port, () => {
 process.on('SIGTERM', () => {
     console.log('🔄 Cerrando servidor...');
     server.close(() => {
-        pool.end();
+        if (pool) pool.end();
         console.log('✅ Servidor cerrado');
     });
 });

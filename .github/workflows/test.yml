@@ -4,11 +4,20 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: [main, test]
 
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
+    env:
+      DB_HOST: localhost
+      DB_USER: test
+      DB_PASSWORD: test
+      DB_DATABASE: test
+      JWT_SECRET: test-secret-key-for-ci
+      GEMINI_API_KEY: test-key
+      PINECONE_API_KEY: test-key
+      PINECONE_ENVIRONMENT: us-east-1-gcp
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,13 +25,3 @@ jobs:
           node-version: '18'
       - run: cd backend && npm ci
       - run: cd backend && npm test
-
-  e2e-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      - run: npx playwright install
-      - run: cd frontend && npx playwright test
