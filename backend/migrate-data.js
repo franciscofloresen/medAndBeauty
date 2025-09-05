@@ -8,7 +8,7 @@ async function migrateData() {
     const oldDb = await mysql.createConnection({
         host: 'medandbeauty.cdk8q4u6k584.us-east-1.rds.amazonaws.com',
         user: 'admin',
-        password: 'Poncho2001!',
+        password: process.env.DB_PASSWORD,
         database: 'productos_db'  // Base de datos actual
     });
     
@@ -16,7 +16,7 @@ async function migrateData() {
     const newDb = await mysql.createConnection({
         host: 'medandbeauty-aurora.cluster-cdk8q4u6k584.us-east-1.rds.amazonaws.com',
         user: 'admin',
-        password: 'Poncho2001!',  // Usar el mismo password
+        password: process.env.DB_PASSWORD,
         database: 'medandbeauty'
     });
     

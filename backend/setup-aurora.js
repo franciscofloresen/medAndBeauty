@@ -7,7 +7,7 @@ async function setupAurora() {
     const oldDb = await mysql.createConnection({
         host: 'medandbeauty.cdk8q4u6k584.us-east-1.rds.amazonaws.com',
         user: 'admin',
-        password: 'Poncho2001!',
+        password: process.env.DB_PASSWORD,
         database: 'productos_db'
     });
     

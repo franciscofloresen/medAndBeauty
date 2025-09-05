@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+require('dotenv').config();
 
 async function testConnections() {
     console.log('🔍 Probando conexiones...');
@@ -9,7 +10,7 @@ async function testConnections() {
         const oldDb = await mysql.createConnection({
             host: 'medandbeauty.cdk8q4u6k584.us-east-1.rds.amazonaws.com',
             user: 'admin',
-            password: 'Poncho2001!',
+            password: process.env.DB_PASSWORD,
             database: 'productos_db',
             timeout: 10000
         });
@@ -28,7 +29,7 @@ async function testConnections() {
         const newDb = await mysql.createConnection({
             host: 'medandbeauty-aurora.cluster-cdk8q4u6k584.us-east-1.rds.amazonaws.com',
             user: 'admin',
-            password: 'Poncho2001!',
+            password: process.env.DB_PASSWORD,
             database: 'medandbeauty',
             timeout: 10000
         });
