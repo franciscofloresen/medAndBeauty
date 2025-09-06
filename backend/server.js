@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const { Pinecone } = require('@pinecone-database/pinecone');
+const { initAurora } = require('./init-aurora');
 require('dotenv').config();
 
 const app = express();
@@ -70,15 +71,38 @@ function sanitize(str) {
 
 // DB Config - Solo crear pool si no es test
 let pool = null;
+let dbInitialized = false;
+
+async function initializeDatabase() {
+    if (process.env.NODE_ENV === 'test' || dbInitialized) return;
+    
+    try {
+        // Si es Aurora, inicializar primero
+        if (process.env.DB_HOST && process.env.DB_HOST.includes('aurora')) {
+            console.log('🔄 Inicializando Aurora...');
+            await initAurora();
+        }
+        
+        const dbConfig = {
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_DATABASE,
+            connectionLimit: 10
+        };
+        
+        pool = mysql.createPool(dbConfig).promise();
+        dbInitialized = true;
+        console.log('✅ Base de datos inicializada');
+        
+    } catch (error) {
+        console.error('❌ Error inicializando base de datos:', error.message);
+    }
+}
+
+// Inicializar DB al arrancar
 if (process.env.NODE_ENV !== 'test') {
-    const dbConfig = {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_DATABASE,
-        connectionLimit: 10
-    };
-    pool = mysql.createPool(dbConfig).promise();
+    initializeDatabase();
 }
 
 // Pinecone - Solo inicializar si no es test
@@ -95,9 +119,17 @@ app.get('/health', async (req, res) => {
         if (pool) {
             await pool.execute('SELECT 1');
         }
-        res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+        res.json({ 
+            status: 'healthy', 
+            timestamp: new Date().toISOString(),
+            database: process.env.DB_HOST ? 'connected' : 'not configured'
+        });
     } catch (error) {
-        res.status(503).json({ status: 'unhealthy', error: error.message });
+        res.status(503).json({ 
+            status: 'unhealthy', 
+            error: error.message,
+            database: process.env.DB_HOST || 'not configured'
+        });
     }
 });
 
