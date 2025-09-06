@@ -213,13 +213,15 @@ app.post('/api/buscar', async (req, res) => {
 
 // Login con rate limiting
 app.post('/api/login', loginLimiter, async (req, res) => {
-    if (!pool) return res.status(500).json({ message: 'Base de datos no disponible' });
-    
     try {
         const { username, password } = req.body;
         
         if (!username || !password) {
             return res.status(400).json({ message: 'Usuario y contraseña requeridos' });
+        }
+
+        if (!pool) {
+            return res.status(500).json({ message: 'Base de datos no disponible' });
         }
 
         const [rows] = await pool.query('SELECT * FROM Admins WHERE username = ?', [sanitize(username)]);
@@ -275,17 +277,20 @@ app.use('*', (req, res) => {
     res.status(404).json({ error: 'Endpoint no encontrado' });
 });
 
-const server = app.listen(port, () => {
-    console.log(`✅ Servidor seguro ejecutándose en puerto ${port}`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    console.log('🔄 Cerrando servidor...');
-    server.close(() => {
-        if (pool) pool.end();
-        console.log('✅ Servidor cerrado');
+// Solo iniciar servidor si no es test
+if (process.env.NODE_ENV !== 'test') {
+    const server = app.listen(port, () => {
+        console.log(`✅ Servidor seguro ejecutándose en puerto ${port}`);
     });
-});
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+        console.log('🔄 Cerrando servidor...');
+        server.close(() => {
+            if (pool) pool.end();
+            console.log('✅ Servidor cerrado');
+        });
+    });
+}
 
 module.exports = app;

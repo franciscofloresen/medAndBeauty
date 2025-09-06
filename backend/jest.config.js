@@ -5,5 +5,7 @@ module.exports = {
     'server.js',
     '!node_modules/**'
   ],
-  setupFilesAfterEnv: ['<rootDir>/test/setup.js']
+  setupFilesAfterEnv: ['<rootDir>/test/setup.js'],
+  forceExit: true,
+  detectOpenHandles: true
 };
