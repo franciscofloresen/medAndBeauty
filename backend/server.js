@@ -243,6 +243,36 @@ app.post('/api/buscar', async (req, res) => {
     }
 });
 
+app.post('/api/chatbot', async (req, res) => {
+    try {
+        const { message } = req.body;
+        if (!message || message.trim().length === 0) {
+            return res.status(400).json({ error: 'Mensaje requerido' });
+        }
+        
+        // Buscar productos relacionados
+        const products = await searchProducts(message);
+        
+        let response = '';
+        if (products.length > 0) {
+            response = `Encontré ${products.length} producto(s) relacionado(s):\n\n`;
+            products.slice(0, 3).forEach(product => {
+                response += `• ${product.Producto} - $${product.Precio_de_venta_con_IVA}\n`;
+                if (product.Descripcion) {
+                    response += `  ${product.Descripcion.substring(0, 100)}...\n`;
+                }
+                response += '\n';
+            });
+        } else {
+            response = 'No encontré productos específicos para tu consulta. ¿Podrías ser más específico sobre qué tipo de producto buscas?';
+        }
+        
+        res.json({ response });
+    } catch (error) {
+        handleError(error, res, 'Error en chatbot');
+    }
+});
+
 // Login con rate limiting
 app.post('/api/login', loginLimiter, async (req, res) => {
     try {
